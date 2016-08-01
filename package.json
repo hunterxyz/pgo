@@ -1,0 +1,11 @@
+{
+  "name": "pgo",
+  "version": "0.0.1",
+  "dependencies": {
+    "babel-polyfill": "^6.9.1",
+    "express": "^4.14.0",
+    "pokemongo-api": "^0.3.2",
+    "q": "^1.4.1",
+    "serve-static": "^1.11.1"
+  }
+}
