@@ -7,21 +7,21 @@ html, body {
 
 }
 
-.map-placeholder{
+.map-placeholder {
     height: 100%;
     width: 100%;
 }
 
-.nearby{
+.nearby {
     position: absolute;
     bottom: 0;
-    right:0;
+    right: 50px;
     background-color: white;
-    width: 360px;
-    height: 360px;
+    width: 300px;
+    height: 300px;
     overflow: auto;
 }
 
-.nearby img{
-    width: 33%;
+.nearby img {
+    width: 25%;
 }
