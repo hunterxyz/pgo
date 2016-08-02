@@ -52,7 +52,7 @@ var handleMarkerTimer = function (marker) {
 
 };
 
-var clickOnPokemon = function(){
+var clickOnPokemon = function () {
 
     console.log(this.pokemon);
 
@@ -79,7 +79,7 @@ var createPokeMarkers = function (map, markers) {
         }
 
         var image = {
-            url:        pokemon.img,
+            url:        '/assets/images/' + pokemon.num + '.png',
             size:       new google.maps.Size(120, 120),
             origin:     new google.maps.Point(0, 0),
             anchor:     new google.maps.Point(20, 20),
@@ -99,7 +99,7 @@ var createPokeMarkers = function (map, markers) {
             marker.setOpacity(0.5);
         }
 
-        marker.addListener('click', $.proxy(clickOnPokemon,marker));
+        marker.addListener('click', $.proxy(clickOnPokemon, marker));
 
         marker.setMap(map);
 
