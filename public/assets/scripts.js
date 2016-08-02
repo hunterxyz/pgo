@@ -6,11 +6,21 @@ var spawnMarkers = [];
 
 var ms2time = function msToTime(duration) {
 
-    var seconds = parseInt((duration / 1000) % 60);
-    var minutes = parseInt((duration / (1000 * 60)) % 60);
+    var isNegative = false;
+    if (duration < 0) {
+        isNegative = true;
+        duration = Math.abs(duration);
+    }
+
+    var seconds = parseInt((duration / 1000) % 60, 10);
+    var minutes = parseInt((duration / (1000 * 60)) % 60, 10);
 
     minutes = (minutes < 10) ? '0' + minutes : minutes;
     seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+    if (isNegative) {
+        minutes = '-' + minutes;
+    }
 
     return minutes + ':' + seconds;
 
@@ -18,14 +28,33 @@ var ms2time = function msToTime(duration) {
 
 var handleMarkerTimer = function (marker) {
 
-    this.time_till_hidden_ms = this.time_till_hidden_ms - 1000;
-
     if (this.time_till_hidden_ms < 0) {
-        clearInterval(this.interval);
-        marker.setMap(null);
+
+        this.time_till_hidden_ms = this.time_till_hidden_ms + 1000;
+
+        if (this.time_till_hidden_ms > 0) {
+            clearInterval(this.interval);
+            marker.setMap(null);
+        }
+
+    } else {
+
+        this.time_till_hidden_ms = this.time_till_hidden_ms - 1000;
+
+        if (this.time_till_hidden_ms < 0) {
+            clearInterval(this.interval);
+            marker.setMap(null);
+        }
+
     }
 
     marker.setTitle(ms2time(this.time_till_hidden_ms));
+
+};
+
+var clickOnPokemon = function(){
+
+    console.log(this.pokemon);
 
 };
 
@@ -34,6 +63,7 @@ var createPokeMarkers = function (map, markers) {
     for (var j = 0; j < markers.length; j++) {
 
         var pokemon = markers[j];
+        var title = ms2time(pokemon.time_till_hidden_ms);
 
         var pokemonOnMap = _.find(pokeMarkers, function (pokeMarker) {
             return pokeMarker.spawn_point_id === pokemon.spawn_point_id;
@@ -42,26 +72,34 @@ var createPokeMarkers = function (map, markers) {
         if (pokemonOnMap || pokemon.time_till_hidden_ms < 0) {
             if (pokemon.time_till_hidden_ms < 0) {
                 console.log(pokemon);
+
+            } else {
+                continue;
             }
-            continue;
         }
 
         var image = {
-            url: pokemon.img,
-            size: new google.maps.Size(120, 120),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(20, 20),
+            url:        pokemon.img,
+            size:       new google.maps.Size(120, 120),
+            origin:     new google.maps.Point(0, 0),
+            anchor:     new google.maps.Point(20, 20),
             scaledSize: new google.maps.Size(40, 40)
         };
 
         var marker = new google.maps.Marker({
             position: {lat: pokemon.latitude, lng: pokemon.longitude},
-            map: map,
-            icon: image,
-            pokemon: pokemon,
-            title: ms2time(pokemon.time_till_hidden_ms),
-            zIndex: 1
+            map:      map,
+            icon:     image,
+            pokemon:  pokemon,
+            title:    title,
+            zIndex:   1
         });
+
+        if (pokemon.time_till_hidden_ms < 0) {
+            marker.setOpacity(0.5);
+        }
+
+        marker.addListener('click', $.proxy(clickOnPokemon,marker));
 
         marker.setMap(map);
 
@@ -86,14 +124,14 @@ var createSpawnMarkers = function (map, markers) {
                     createSpawnMarker(map, subMarker);
                 }
 
-            })
+            });
 
         } else {
 
             if (!_.some(spawnMarkers, function (spawnMarker) {
                     spawnMarker.latitude === marker.latitude && spawnMarker.longitude === marker.longitude;
                 })) {
-                createSpawnMarker(map, subMarker);
+                createSpawnMarker(map, marker);
             }
         }
 
@@ -103,20 +141,20 @@ var createSpawnMarkers = function (map, markers) {
 var createSpawnMarker = function (map, spawnPoint) {
 
     var image = {
-        url: '/assets/images/pokemon-egg.png',
-        size: new google.maps.Size(80, 86),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(6, 6),
+        url:        '/assets/images/pokemon-egg.png',
+        size:       new google.maps.Size(80, 86),
+        origin:     new google.maps.Point(0, 0),
+        anchor:     new google.maps.Point(6, 6),
         scaledSize: new google.maps.Size(12, 12)
     };
 
     var marker = new google.maps.Marker({
-        position: {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
-        map: map,
-        icon: image,
-        clickable: false,
+        position:   {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
+        map:        map,
+        icon:       image,
+        clickable:  false,
         spawnPoint: spawnPoint,
-        zIndex: 0
+        zIndex:     0
     });
 
     marker.setMap(map);
@@ -124,7 +162,6 @@ var createSpawnMarker = function (map, spawnPoint) {
     spawnMarkers.push(marker);
 
 };
-
 
 var updateNearbyRadar = function (nearbyPokemons) {
 
@@ -146,19 +183,19 @@ $(document).ready(function () {
 
     map = new google.maps.Map($('.map-placeholder')[0], {
         center: latLng,
-        zoom: 14
+        zoom:   14
     });
 
     var marker = new google.maps.Marker({
-        position: latLng,
-        map: map,
+        position:    latLng,
+        map:         map,
         zoomControl: true
     });
 
     map.addListener('click', function (e) {
 
         $.ajax({
-            url: 'getMapObjects',
+            url:  'getMapObjects',
             data: e.latLng.toJSON()
         }).success(function (objects) {
 
