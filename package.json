@@ -4,7 +4,8 @@
   "dependencies": {
     "babel-polyfill": "^6.9.1",
     "express": "^4.14.0",
-    "pokemongo-api": "^0.3.2",
+    "lodash": "^4.14.1",
+    "pokemongo-api": "^1.3.0",
     "q": "^1.4.1",
     "serve-static": "^1.11.1",
     "xdate": "^0.8.0"
