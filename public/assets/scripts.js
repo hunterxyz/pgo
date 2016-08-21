@@ -1,9 +1,11 @@
 'use strict';
 var map = null;
-//var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
-var latLng = {lat: 48.102848, lng: 11.533405}; //FL
+var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
+//var latLng = {lat: 48.102848, lng: 11.533405}; //FL
 var pokeMarkers = [];
 var spawnMarkers = [];
+var pokestopMarkers = [];
+var gymMarkers = [];
 
 var ms2time = function msToTime(duration) {
 
@@ -166,6 +168,43 @@ var createSpawnMarker = function (map, spawnPoint) {
 
 };
 
+var createPokestopMarkers = function (map, markers) {
+
+    _.each(markers, function (marker) {
+
+        if (!_.some(pokeMarkers, function (pokestopMarker) {
+                pokestopMarker.id === marker.id;
+            })) {
+            createPokestopMarker(map, marker);
+        }
+    });
+};
+
+var createPokestopMarker = function (map, pokestop) {
+
+    var image = {
+        url: '/assets/images/pokestop.png',
+        size: new google.maps.Size(94, 200),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(12, 50),
+        scaledSize: new google.maps.Size(23, 50)
+    };
+
+    var marker = new google.maps.Marker({
+        position: {lat: pokestop.latitude, lng: pokestop.longitude},
+        map: map,
+        icon: image,
+        clickable: false,
+        pokestop: pokestop,
+        zIndex: 0
+    });
+
+    marker.setMap(map);
+
+    pokestopMarkers.push(marker);
+
+};
+
 var updateNearbyRadar = function (nearbyPokemons) {
 
     var nearbyPlaceholder = $('.nearby');
@@ -204,11 +243,14 @@ $(document).ready(function () {
             data: e.latLng.toJSON()
         }).success(function (objects) {
 
-            marker.setPosition(e.latLng);
+            if (objects.catchable){
+                marker.setPosition(e.latLng);
 
-            createPokeMarkers(map, objects.catchable);
-            updateNearbyRadar(objects.nearby);
-            createSpawnMarkers(map, objects.spawn);
+                createPokeMarkers(map, objects.catchable);
+                updateNearbyRadar(objects.nearby);
+                createSpawnMarkers(map, objects.spawn);
+                createPokestopMarkers(map, objects.forts.checkpoints);
+            }
 
         });
 

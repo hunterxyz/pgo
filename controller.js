@@ -15,7 +15,7 @@ var Controller = function () {
     this.pokemonGo = pokemonGo;
 
     this.pokemonGo.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -32,7 +32,7 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
 
 
     this.pokemonGo.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -42,23 +42,15 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
 
     } catch (error) {
 
-        this.pokemonGo = new PokemonGo();
-
-        this.pokemonGo.player.location = {
-            latitude:  parseFloat(lat),
-            longitude: parseFloat(lng)
-        };
-
-        yield this.pokemonGo.login(username, password, provider);
-
-        objects = yield this.pokemonGo.GetMapObjects();
-
+        console.log(error);
+        res.send({});
     }
 
     res.send({
         catchable: objects.wild_pokemons,
-        nearby:    objects.nearby_pokemons,
-        spawn:     objects.spawn_points
+        nearby: objects.nearby_pokemons,
+        spawn: objects.spawn_points,
+        forts: objects.forts
     });
 
 });
@@ -66,7 +58,7 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
 Controller.prototype.walk = Q.async(function*(req, res) {
 
     pokemonGo.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -83,7 +75,7 @@ Controller.prototype.playerInfo = Q.async(function*(req, res) {
     var pokemonGo = new PokemonGo();
 
     pokemonGo.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
