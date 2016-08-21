@@ -1,6 +1,8 @@
 'use strict';
 
+require('babel-polyfill');
 var Q = require('q');
+var _ = require('lodash');
 var PokemonGo = require('pokemongo-api').default;
 
 var username = process.env.PGO_USERNAME || 'user';
