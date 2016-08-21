@@ -14,6 +14,12 @@ var pokemonGo = new PokemonGo();
 
 var Controller = function () {
 
+    this.login();
+
+};
+
+Controller.prototype.login = function(){
+
     this.pokemonGo = pokemonGo;
 
     this.pokemonGo.player.location = {
@@ -31,8 +37,7 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
     lng = req.query.lng || lng;
 
     var objects = [];
-
-
+    
     this.pokemonGo.player.location = {
         latitude: parseFloat(lat),
         longitude: parseFloat(lng)
@@ -45,6 +50,12 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
     } catch (error) {
 
         console.log(error);
+        if (error.message === 'Illegal buffer'){
+
+            yield this.login();
+
+        }
+
         res.send({});
     }
 
