@@ -14,20 +14,20 @@ var pokemonGo = new PokemonGo();
 
 var Controller = function () {
 
+    this.pokemonGo = pokemonGo;
+
     this.login();
 
 };
 
 Controller.prototype.login = function(){
 
-    this.pokemonGo = pokemonGo;
-
     this.pokemonGo.player.location = {
         latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
-    this.pokemonGo.login(username, password, provider);
+   return this.pokemonGo.login(username, password, provider);
 
 };
 
@@ -52,11 +52,14 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
         console.log(error);
         if (error.message === 'Illegal buffer'){
 
+            this.pokemonGo = new PokemonGo();
+
             yield this.login();
+
+            yield this.getMapObjects(req, res);
 
         }
 
-        res.send({});
     }
 
     res.send({
