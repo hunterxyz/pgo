@@ -27,7 +27,7 @@ function wrapController(toExecute) {
 router.init = function (app) {
 
     app.get('/getMapObjects', wrapController(controller.getMapObjects));
-    app.get('/walk', wrapController(controller.walk));
+    app.post('/walkToPoint', wrapController(controller.walkToPoint));
     app.get('/playerinfo', wrapController(controller.playerInfo));
 
 };
