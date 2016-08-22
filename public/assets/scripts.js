@@ -173,9 +173,11 @@ var createPokestopMarkers = function (map, markers) {
 
     _.each(markers, function (marker) {
 
-        if (!_.some(pokeMarkers, function (pokestopMarker) {
-                pokestopMarker.id === marker.id;
-            })) {
+        var noMarkerFound = !_.some(pokeMarkers, function (pokestopMarker) {
+            pokestopMarker.id === marker.id;
+        });
+
+        if (noMarkerFound) {
             createPokestopMarker(map, marker);
         }
     });
@@ -244,7 +246,7 @@ $(document).ready(function () {
             data: e.latLng.toJSON()
         }).success(function (objects) {
 
-            if (objects.catchable){
+            if (objects.catchable) {
                 marker.setPosition(e.latLng);
 
                 createPokeMarkers(map, objects.catchable);
@@ -253,7 +255,27 @@ $(document).ready(function () {
                 createPokestopMarkers(map, objects.forts.checkpoints);
             }
 
-        });
+        }).fail(function () {
+            alert('no data');
+        })
+
+    });
+
+    map.addListener('rightclick', function (e) {
+
+        $.ajax({
+            method: 'POST',
+            url: 'walktoPoint',
+            data: JSON.stringify(e.latLng.toJSON()),
+            contentType: 'application/json',
+            dataType: "json"
+        }).success(function (result) {
+
+            console.log(result.distance + ' meters');
+
+        }).fail(function () {
+            alert('no data');
+        })
 
     });
 
