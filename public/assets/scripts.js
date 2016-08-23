@@ -6,6 +6,7 @@ var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
 var gymMarkers = [];
+var coordinateMarkers = [];
 
 var ms2time = function msToTime(duration) {
 
@@ -26,6 +27,37 @@ var ms2time = function msToTime(duration) {
     }
 
     return minutes + ':' + seconds;
+
+};
+
+var drawCoordinates = function (coordinates) {
+
+    for (var i = 0; i < coordinateMarkers.length; i++) {
+
+        var marker = coordinateMarkers[i];
+
+        marker.setMap(null);
+
+    }
+
+    coordinateMarkers = [];
+
+    for (var j = 0; j < coordinates.length; j++) {
+        var coordinate = coordinates[j];
+
+        var coordinateMarker = new google.maps.Marker({
+            position: {lat: coordinate.lat, lng: coordinate.lng},
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 2
+            },
+            zIndex: 1
+        });
+
+        coordinateMarkers.push(coordinateMarker);
+
+    }
 
 };
 
@@ -85,20 +117,20 @@ var createPokeMarkers = function (map, markers) {
         }
 
         var image = {
-            url:        '/assets/images/' + pokemon.num + '.png',
-            size:       new google.maps.Size(120, 120),
-            origin:     new google.maps.Point(0, 0),
-            anchor:     new google.maps.Point(20, 20),
+            url: '/assets/images/' + pokemon.num + '.png',
+            size: new google.maps.Size(120, 120),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(20, 20),
             scaledSize: new google.maps.Size(40, 40)
         };
 
         var marker = new google.maps.Marker({
             position: {lat: pokemon.latitude, lng: pokemon.longitude},
-            map:      map,
-            icon:     image,
-            pokemon:  pokemon,
-            title:    title,
-            zIndex:   1
+            map: map,
+            icon: image,
+            pokemon: pokemon,
+            title: title,
+            zIndex: 1
         });
 
         if (pokemon.time_till_hidden_ms < 0) {
@@ -107,7 +139,7 @@ var createPokeMarkers = function (map, markers) {
 
         marker.addListener('click', $.proxy(clickOnPokemon, marker));
 
-        marker.setMap(map);
+        // marker.setMap(map);
 
         pokemon.interval = setInterval($.proxy(handleMarkerTimer, pokemon, marker, pokeMarkers), 1000);
 
@@ -147,20 +179,20 @@ var createSpawnMarkers = function (map, markers) {
 var createSpawnMarker = function (map, spawnPoint) {
 
     var image = {
-        url:        '/assets/images/pokemon-egg.png',
-        size:       new google.maps.Size(80, 86),
-        origin:     new google.maps.Point(0, 0),
-        anchor:     new google.maps.Point(6, 6),
+        url: '/assets/images/pokemon-egg.png',
+        size: new google.maps.Size(80, 86),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(6, 6),
         scaledSize: new google.maps.Size(12, 12)
     };
 
     var marker = new google.maps.Marker({
-        position:   {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
-        map:        map,
-        icon:       image,
-        clickable:  false,
+        position: {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
+        map: map,
+        icon: image,
+        clickable: false,
         spawnPoint: spawnPoint,
-        zIndex:     0
+        zIndex: 0
     });
 
     marker.setMap(map);
@@ -186,20 +218,20 @@ var createPokestopMarkers = function (map, markers) {
 var createPokestopMarker = function (map, pokestop) {
 
     var image = {
-        url:        '/assets/images/pokestop.png',
-        size:       new google.maps.Size(94, 200),
-        origin:     new google.maps.Point(0, 0),
-        anchor:     new google.maps.Point(12, 50),
+        url: '/assets/images/pokestop.png',
+        size: new google.maps.Size(94, 200),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(12, 50),
         scaledSize: new google.maps.Size(23, 50)
     };
 
     var marker = new google.maps.Marker({
-        position:  {lat: pokestop.latitude, lng: pokestop.longitude},
-        map:       map,
-        icon:      image,
+        position: {lat: pokestop.latitude, lng: pokestop.longitude},
+        map: map,
+        icon: image,
         clickable: false,
-        pokestop:  pokestop,
-        zIndex:    0
+        pokestop: pokestop,
+        zIndex: 0
     });
 
     marker.setMap(map);
@@ -231,39 +263,39 @@ $(document).ready(function () {
 
     map = new google.maps.Map($('.map-placeholder')[0], {
         center: latLng,
-        zoom:   14
+        zoom: 14
     });
 
     var marker = new google.maps.Marker({
         position: latLng,
-        map:      map
+        map: map
     });
 
     var radarCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor:    '#FF0000',
-        fillOpacity:  0.1,
-        map:          map,
-        center:       latLng,
-        radius:       200,
-        clickable:    false
+        fillColor: '#FF0000',
+        fillOpacity: 0.1,
+        map: map,
+        center: latLng,
+        radius: 200,
+        clickable: false
     });
 
     var interactionCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor:    '#FF0000',
-        fillOpacity:  0.1,
-        map:          map,
-        center:       latLng,
-        radius:       40,
-        clickable:    false
+        fillColor: '#FF0000',
+        fillOpacity: 0.1,
+        map: map,
+        center: latLng,
+        radius: 40,
+        clickable: false
     });
 
 
     map.addListener('click', function (e) {
 
         $.ajax({
-            url:  'getMapObjects',
+            url: 'getMapObjects',
             data: e.latLng.toJSON()
         }).success(function (objects) {
 
@@ -286,15 +318,21 @@ $(document).ready(function () {
 
     map.addListener('rightclick', function (e) {
 
+        var data = e.latLng.toJSON();
+
+        data.kmh = 50;
+
         $.ajax({
-            method:      'POST',
-            url:         'walktoPoint',
-            data:        JSON.stringify(e.latLng.toJSON()),
+            method: 'POST',
+            url: 'walktoPoint',
+            data: JSON.stringify(data),
             contentType: 'application/json',
-            dataType:    "json"
+            dataType: "json"
         }).success(function (result) {
 
             console.log(result.distance + ' meters');
+
+            drawCoordinates(result.coordinates);
 
         }).fail(function () {
             alert('no data');
