@@ -101,7 +101,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     // let walking = yield pokemonGo.player.walkToPoint(lat, lng);
 
-    var distance = getDistance(pokemonGo.player.location.latitude, pokemonGo.player.location.longitude, lat, lng);
+    var distance = getDistance(this.pokemonGo.player.location.latitude, this.pokemonGo.player.location.longitude, lat, lng);
     res.send({distance: distance});
 
 });
