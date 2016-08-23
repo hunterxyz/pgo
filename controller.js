@@ -1,35 +1,30 @@
 'use strict';
 
+if (Number.prototype.toRadians === undefined) {
+    Number.prototype.toRadians = function () {
+        return this * Math.PI / 180;
+    };
+}
+
+/** Extend Number object with method to convert radians to numeric (signed) degrees */
+if (Number.prototype.toDegrees === undefined) {
+    Number.prototype.toDegrees = function () {
+        return this * 180 / Math.PI;
+    };
+}
+
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
 var PokemonGo = require('pokemongo-api').default;
+var geoHelper = require('./utils/GeoHelper');
 
 var username = process.env.PGO_USERNAME || 'user';
 var password = process.env.PGO_PASSWORD || 'password';
 var provider = process.env.PGO_PROVIDER || 'ptc';
 var lat = process.env.LATITUDE || 48.140582785975916;
-var lng = process.env.LONGITUDE || 11.590517163276672;
+var lng = process.env.longitude || 11.590517163276672;
 var pokemonGo = new PokemonGo();
-
-function deg2rad(deg) {
-    return deg * (Math.PI / 180)
-};
-
-var getDistance = function (lat1, lon1, lat2, lon2) {
-    var earthRadius = 6371 * 1000; // Radius of the earth in meters
-    var dLat = deg2rad(lat2 - lat1);  // deg2rad below
-    var dLon = deg2rad(lon2 - lon1);
-    var a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var distance = earthRadius * c; // Distance in km
-
-    return distance;
-
-};
 
 var Controller = function () {
 
@@ -98,11 +93,39 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     let lat = req.body.lat;
     let lng = req.body.lng;
+    let kmPerHour = res.body.kmh || 50;
+    let coordinates = [];
 
     // let walking = yield pokemonGo.player.walkToPoint(lat, lng);
 
-    var distance = getDistance(this.pokemonGo.player.location.latitude, this.pokemonGo.player.location.longitude, lat, lng);
-    res.send({distance: distance});
+    var latStart = this.pokemonGo.player.location.latitude;
+    var lngStart = this.pokemonGo.player.location.longitude;
+    var distance = geoHelper.getDistance(latStart, lngStart, lat, lng);
+
+    var metersPerSecond = geoHelper.kmh2ms(kmPerHour);
+    var seconds = distance / metersPerSecond;
+    var timer = 0;
+
+    while (timer < seconds) {
+
+        timer++;
+        var distanceToReach = metersPerSecond;
+
+        if (timer > seconds) {
+            distanceToReach = distance % metersPerSecond;
+        }
+
+        var bearing = geoHelper.getBearing(latStart, lngStart, lat, lng);
+        var newCoordinates = geoHelper.getDestinationPoint(latStart, lngStart, distanceToReach, bearing);
+
+        coordinates.push(newCoordinates);
+
+        latStart = newCoordinates.lat;
+        lngStart = newCoordinates.lng;
+
+    }
+
+    res.send({distance: distance, bearing: bearing, coordinates: coordinates});
 
 });
 
