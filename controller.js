@@ -37,7 +37,7 @@ var Controller = function () {
 Controller.prototype.login = function () {
 
     this.pokemonGo.player.location = {
-        latitude: parseFloat(lat),
+        latitude:  parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -53,7 +53,7 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
     var objects = [];
 
     this.pokemonGo.player.location = {
-        latitude: parseFloat(lat),
+        latitude:  parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -82,9 +82,9 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
 
     res.send({
         catchable: objects.wild_pokemons,
-        nearby: objects.nearby_pokemons,
-        spawn: objects.spawn_points,
-        forts: objects.forts
+        nearby:    objects.nearby_pokemons,
+        spawn:     objects.spawn_points,
+        forts:     objects.forts
     });
 
 });
@@ -94,6 +94,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
     let lat = req.body.lat;
     let lng = req.body.lng;
     let kmPerHour = req.body.kmh || 50;
+    let stepFrequency = req.body.stepFrequency || 1; //seconds
     let coordinates = [];
 
     // let walking = yield pokemonGo.player.walkToPoint(lat, lng);
@@ -108,11 +109,11 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     while (timer < seconds) {
 
-        timer++;
-        var distanceToReach = metersPerSecond;
+        timer = timer + stepFrequency;
+        var distanceToReach = metersPerSecond * stepFrequency;
 
         if (timer > seconds) {
-            distanceToReach = distance % metersPerSecond;
+            distanceToReach = distance % (metersPerSecond * stepFrequency);
         }
 
         var bearing = geoHelper.getBearing(latStart, lngStart, lat, lng);

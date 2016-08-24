@@ -1,7 +1,7 @@
 'use strict';
 var map = null;
-var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
-//var latLng = {lat: 48.102848, lng: 11.533405}; //FL
+// var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
+var latLng = {lat: 48.102848, lng: 11.533405}; //FL
 var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
@@ -321,6 +321,7 @@ $(document).ready(function () {
         var data = e.latLng.toJSON();
 
         data.kmh = 50;
+        data.stepFrequency = 5;
 
         $.ajax({
             method: 'POST',
