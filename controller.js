@@ -28,8 +28,9 @@ var pokemonGo = new PokemonGo();
 
 var Controller = function () {
 
+    this.walkingInterval = null;
     this.pokemonGo = pokemonGo;
-
+    this.lastMapObjects = {};
     this.login();
 
 };
@@ -37,12 +38,22 @@ var Controller = function () {
 Controller.prototype.login = function () {
 
     this.pokemonGo.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
     return this.pokemonGo.login(username, password, provider);
 
+};
+
+var parseMapResponse = function (objects) {
+
+    return {
+        catchable: objects.wild_pokemons,
+        nearby: objects.nearby_pokemons,
+        spawn: objects.spawn_points,
+        forts: objects.forts
+    };
 };
 
 Controller.prototype.getMapObjects = Q.async(function*(req, res) {
@@ -53,7 +64,7 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
     var objects = [];
 
     this.pokemonGo.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -80,24 +91,21 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
         res.status(500).send({});
     }
 
-    res.send({
-        catchable: objects.wild_pokemons,
-        nearby:    objects.nearby_pokemons,
-        spawn:     objects.spawn_points,
-        forts:     objects.forts
-    });
+    this.lastMapObjects = parseMapResponse(objects);
+
+    this.socket.emit('populateMap', this.lastMapObjects);
+
+    res.send({});
 
 });
 
 Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
+    var self = this;
     let lat = req.body.lat;
     let lng = req.body.lng;
     let kmPerHour = req.body.kmh || 50;
     let stepFrequency = req.body.stepFrequency || 1; //seconds
-    let coordinates = [];
-
-    // let walking = yield pokemonGo.player.walkToPoint(lat, lng);
 
     var latStart = this.pokemonGo.player.location.latitude;
     var lngStart = this.pokemonGo.player.location.longitude;
@@ -106,34 +114,82 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
     var metersPerSecond = geoHelper.kmh2ms(kmPerHour);
     var seconds = distance / metersPerSecond;
     var timer = 0;
+    var lastTimeMapCall = 0;
 
-    while (timer < seconds) {
+    if (this.walkingInterval) {
+        clearInterval(this.walkingInterval);
+    }
+
+    var walkToNextpoint = function () {
 
         timer = timer + stepFrequency;
+        lastTimeMapCall = lastTimeMapCall + stepFrequency;
+        var isLastStep = false;
         var distanceToReach = metersPerSecond * stepFrequency;
 
         if (timer > seconds) {
             distanceToReach = distance % (metersPerSecond * stepFrequency);
+            clearInterval(self.walkingInterval);
+            isLastStep = true;
         }
 
         var bearing = geoHelper.getBearing(latStart, lngStart, lat, lng);
         var newCoordinates = geoHelper.getDestinationPoint(latStart, lngStart, distanceToReach, bearing);
-
-        coordinates.push(newCoordinates);
+        newCoordinates.isLastStep = isLastStep;
 
         latStart = newCoordinates.lat;
         lngStart = newCoordinates.lng;
 
-    }
+        self.pokemonGo.player.location = {
+            latitude: newCoordinates.lat,
+            longitude: newCoordinates.lng
+        };
 
-    res.send({distance: distance, bearing: bearing, coordinates: coordinates});
+        self.socket.emit('walkedTo', newCoordinates);
 
-});
+        if (lastTimeMapCall > 10) {
+
+            lastTimeMapCall = lastTimeMapCall % 10;
+
+            self.pokemonGo.GetMapObjects().then(function (response) {
+
+                self.socket.emit('populateMap', parseMapResponse(response));
+
+            })
+        }
+
+    };
+
+    walkToNextpoint();
+    this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
+
+    res.send({distance: distance});
+
+})
+;
 
 Controller.prototype.playerInfo = Q.async(function*(req, res) {
 
     res.send(pokemonGo.player);
 
 });
+
+Controller.prototype.setSocket = function (socket) {
+
+    this.socket = socket;
+
+};
+
+Controller.prototype.initSocketIOListeners = function () {
+
+    var self = this;
+
+    self.socket.on('stopWalking', function () {
+        if (self.walkingInterval) {
+            clearInterval(self.walkingInterval);
+        }
+    });
+
+};
 
 module.exports = new Controller();

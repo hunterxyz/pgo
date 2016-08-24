@@ -6,24 +6,29 @@ var router = require('./router');
 var bodyParser = require('body-parser');
 var serveStatic = require('serve-static');
 var socketio = require('socket.io');
+var cors = require('cors');
+
+var corsOptions = {
+    origin: '*',
+    exposedHeaders: ['totalItems'],
+    methods: ['GET', 'PUT', 'POST', 'DELETE']
+};
 
 const app = express();
 
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(serveStatic('./public'));
 app.set('port', 5050);
-router.init(app);
+
 
 const server = http.createServer(app);
-global.io = socketio(server);
+global.io = socketio.listen(server);
+global.socket = null;
 
-io.on('connection', function (socket) {
+io.set('origins', '*localhost:5050');
 
-    socket.on('hello', function (data) {
-        socket.emit('hello', {message: 'hello'});
-    });
-
-});
+router.init(app);
 
 server.listen(app.get('port'), function () {
     console.log('Started HTTP server on ' + app.get('port'));
