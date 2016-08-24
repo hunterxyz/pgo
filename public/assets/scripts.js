@@ -1,12 +1,40 @@
 'use strict';
 var map = null;
-// var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
-var latLng = {lat: 48.102848, lng: 11.533405}; //FL
+var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
+//var latLng = {lat: 48.102848, lng: 11.533405}; //FL
 var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
 var gymMarkers = [];
 var coordinateMarkers = [];
+
+var marker;
+var radarCircle;
+var pokemonInteractionCircle;
+var interactionCircle;
+var destinationPoint;
+
+var socket = io.connect('http://localhost:5050');
+
+socket.on('connect', function () {
+
+    socket.emit('stopWalking');
+
+    socket.on('walkedTo', function (response) {
+
+        drawCoordinates(response);
+        moveMarkers(response);
+
+    });
+
+    socket.on('populateMap', function (objects) {
+
+        console.log(objects);
+        populateMap(objects);
+
+    });
+
+});
 
 var ms2time = function msToTime(duration) {
 
@@ -30,7 +58,7 @@ var ms2time = function msToTime(duration) {
 
 };
 
-var drawCoordinates = function (coordinates) {
+var clearCoordinates = function () {
 
     for (var i = 0; i < coordinateMarkers.length; i++) {
 
@@ -40,24 +68,25 @@ var drawCoordinates = function (coordinates) {
 
     }
 
+    destinationPoint.setMap(null);
+
     coordinateMarkers = [];
 
-    for (var j = 0; j < coordinates.length; j++) {
-        var coordinate = coordinates[j];
+};
 
-        var coordinateMarker = new google.maps.Marker({
-            position: {lat: coordinate.lat, lng: coordinate.lng},
-            map:      map,
-            icon:     {
-                path:  google.maps.SymbolPath.CIRCLE,
-                scale: 2
-            },
-            zIndex:   1
-        });
+var drawCoordinates = function (coordinates) {
 
-        coordinateMarkers.push(coordinateMarker);
+    var coordinateMarker = new google.maps.Marker({
+        position: {lat: coordinates.lat, lng: coordinates.lng},
+        map: map,
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 2
+        },
+        zIndex: 1
+    });
 
-    }
+    coordinateMarkers.push(coordinateMarker);
 
 };
 
@@ -117,20 +146,20 @@ var createPokeMarkers = function (map, markers) {
         }
 
         var image = {
-            url:        '/assets/images/' + pokemon.num + '.png',
-            size:       new google.maps.Size(120, 120),
-            origin:     new google.maps.Point(0, 0),
-            anchor:     new google.maps.Point(20, 20),
+            url: '/assets/images/' + pokemon.num + '.png',
+            size: new google.maps.Size(120, 120),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(20, 20),
             scaledSize: new google.maps.Size(40, 40)
         };
 
         var marker = new google.maps.Marker({
             position: {lat: pokemon.latitude, lng: pokemon.longitude},
-            map:      map,
-            icon:     image,
-            pokemon:  pokemon,
-            title:    title,
-            zIndex:   1
+            map: map,
+            icon: image,
+            pokemon: pokemon,
+            title: title,
+            zIndex: 1
         });
 
         if (pokemon.time_till_hidden_ms < 0) {
@@ -179,20 +208,20 @@ var createSpawnMarkers = function (map, markers) {
 var createSpawnMarker = function (map, spawnPoint) {
 
     var image = {
-        url:        '/assets/images/pokemon-egg.png',
-        size:       new google.maps.Size(80, 86),
-        origin:     new google.maps.Point(0, 0),
-        anchor:     new google.maps.Point(6, 6),
+        url: '/assets/images/pokemon-egg.png',
+        size: new google.maps.Size(80, 86),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(6, 6),
         scaledSize: new google.maps.Size(12, 12)
     };
 
     var marker = new google.maps.Marker({
-        position:   {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
-        map:        map,
-        icon:       image,
-        clickable:  false,
+        position: {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
+        map: map,
+        icon: image,
+        clickable: false,
         spawnPoint: spawnPoint,
-        zIndex:     0
+        zIndex: 0
     });
 
     marker.setMap(map);
@@ -218,20 +247,20 @@ var createPokestopMarkers = function (map, markers) {
 var createPokestopMarker = function (map, pokestop) {
 
     var image = {
-        url:        '/assets/images/pokestop.png',
-        size:       new google.maps.Size(94, 200),
-        origin:     new google.maps.Point(0, 0),
-        anchor:     new google.maps.Point(12, 50),
+        url: '/assets/images/pokestop.png',
+        size: new google.maps.Size(94, 200),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(12, 50),
         scaledSize: new google.maps.Size(23, 50)
     };
 
     var marker = new google.maps.Marker({
-        position:  {lat: pokestop.latitude, lng: pokestop.longitude},
-        map:       map,
-        icon:      image,
+        position: {lat: pokestop.latitude, lng: pokestop.longitude},
+        map: map,
+        icon: image,
         clickable: false,
-        pokestop:  pokestop,
-        zIndex:    0
+        pokestop: pokestop,
+        zIndex: 0
     });
 
     marker.setMap(map);
@@ -259,66 +288,84 @@ var updateNearbyRadar = function (nearbyPokemons) {
 
 };
 
+var moveMarkers = function (latLng) {
+
+    marker.setPosition(latLng);
+    radarCircle.setCenter(latLng);
+    pokemonInteractionCircle.setCenter(latLng);
+    interactionCircle.setCenter(latLng);
+
+};
+
+var populateMap = function (objects) {
+    createPokeMarkers(map, objects.catchable);
+    updateNearbyRadar(objects.nearby);
+    createSpawnMarkers(map, objects.spawn);
+    createPokestopMarkers(map, objects.forts.checkpoints);
+};
+
 $(document).ready(function () {
 
     map = new google.maps.Map($('.map-placeholder')[0], {
         center: latLng,
-        zoom:   14
+        zoom: 14
     });
 
-    var marker = new google.maps.Marker({
+    marker = new google.maps.Marker({
         position: latLng,
-        map:      map
+        map: map
     });
 
-    var radarCircle = new google.maps.Circle({
+    radarCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor:    '#FF0000',
-        fillOpacity:  0.1,
-        map:          map,
-        center:       latLng,
-        radius:       200,
-        clickable:    false
+        fillColor: '#FF0000',
+        fillOpacity: 0.1,
+        map: map,
+        center: latLng,
+        radius: 200,
+        clickable: false
     });
 
-    var pokemonInteractionCircle = new google.maps.Circle({
+    pokemonInteractionCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor:    '#FF0000',
-        fillOpacity:  0.1,
-        map:          map,
-        center:       latLng,
-        radius:       70,
-        clickable:    false
+        fillColor: '#FF0000',
+        fillOpacity: 0.1,
+        map: map,
+        center: latLng,
+        radius: 70,
+        clickable: false
     });
 
-    var interactionCircle = new google.maps.Circle({
+    interactionCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor:    '#FF0000',
-        fillOpacity:  0.1,
-        map:          map,
-        center:       latLng,
-        radius:       40,
-        clickable:    false
+        fillColor: '#FF0000',
+        fillOpacity: 0.1,
+        map: map,
+        center: latLng,
+        radius: 40,
+        clickable: false
+    });
+
+    destinationPoint = new google.maps.Marker({
+        position: latLng,
+        icon: {
+            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            scale: 2
+        },
+        zIndex: 1
     });
 
     map.addListener('click', function (e) {
 
         $.ajax({
-            url:  'getMapObjects',
+            url: 'getMapObjects',
             data: e.latLng.toJSON()
-        }).success(function (objects) {
+        }).success(function () {
 
-            if (objects.catchable) {
-                marker.setPosition(e.latLng);
-                radarCircle.setCenter(e.latLng);
-                pokemonInteractionCircle.setCenter(e.latLng);
-                interactionCircle.setCenter(e.latLng);
+            var latLng2 = e.latLng;
 
-                createPokeMarkers(map, objects.catchable);
-                updateNearbyRadar(objects.nearby);
-                createSpawnMarkers(map, objects.spawn);
-                createPokestopMarkers(map, objects.forts.checkpoints);
-            }
+            moveMarkers(latLng2);
+            //populateMap(objects);
 
         }).fail(function () {
             alert('no data');
@@ -330,20 +377,24 @@ $(document).ready(function () {
 
         var data = e.latLng.toJSON();
 
+        clearCoordinates();
+
+        destinationPoint.setPosition(e.latLng);
+        destinationPoint.setMap(map);
+
         data.kmh = Number($('select[name=speed]').val());
         data.stepFrequency = Number($('select[name=freq]').val());
 
+
         $.ajax({
-            method:      'POST',
-            url:         'walktoPoint',
-            data:        JSON.stringify(data),
+            method: 'POST',
+            url: 'walktoPoint',
+            data: JSON.stringify(data),
             contentType: 'application/json',
-            dataType:    "json"
+            dataType: "json"
         }).success(function (result) {
 
             console.log(result.distance + ' meters');
-
-            drawCoordinates(result.coordinates);
 
         }).fail(function () {
             alert('no data');

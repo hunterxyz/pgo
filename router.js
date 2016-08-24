@@ -11,7 +11,7 @@ function wrapController(toExecute) {
 
         try {
 
-            yield toExecute.call(controller,request, response);
+            yield toExecute.call(controller, request, response);
 
         } catch (e) {
 
@@ -26,9 +26,21 @@ function wrapController(toExecute) {
 
 router.init = function (app) {
 
-    app.get('/getMapObjects', wrapController(controller.getMapObjects));
-    app.post('/walkToPoint', wrapController(controller.walkToPoint));
-    app.get('/playerinfo', wrapController(controller.playerInfo));
+    io.on('connection', function (socket) {
+
+        controller.setSocket(socket);
+
+        app.get('/getMapObjects', wrapController(controller.getMapObjects));
+        app.post('/walkToPoint', wrapController(controller.walkToPoint));
+        app.get('/playerinfo', wrapController(controller.playerInfo));
+
+        controller.initSocketIOListeners();
+
+        socket.on('hello', function (data) {
+            socket.emit('hello', {message: 'hello'});
+        });
+
+    });
 
 };
 
