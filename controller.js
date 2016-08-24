@@ -93,7 +93,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     let lat = req.body.lat;
     let lng = req.body.lng;
-    let kmPerHour = res.body.kmh || 50;
+    let kmPerHour = req.body.kmh || 50;
     let coordinates = [];
 
     // let walking = yield pokemonGo.player.walkToPoint(lat, lng);
