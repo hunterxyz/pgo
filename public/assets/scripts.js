@@ -1,7 +1,7 @@
 'use strict';
 var map = null;
-// var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
-var latLng = {lat: 48.102848, lng: 11.533405}; //FL
+var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
+//var latLng = {lat: 48.102848, lng: 11.533405}; //FL
 var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
@@ -15,6 +15,8 @@ var radarCircle;
 var pokemonInteractionCircle;
 var interactionCircle;
 var destinationPoint;
+
+var loginCoords;
 
 var socket = io.connect('http://localhost:5050');
 
@@ -38,7 +40,7 @@ socket.on('connect', function () {
 
 });
 
-var sendStopWalking = function(){
+var sendStopWalking = function () {
 
     socket.emit('stopWalking');
 
@@ -310,7 +312,7 @@ var populateMap = function (objects) {
     updateNearbyRadar(objects.nearby);
     createSpawnMarkers(map, objects.spawn);
 
-    if(showPokestops){
+    if (showPokestops) {
         createPokestopMarkers(map, objects.forts.checkpoints);
     }
 };
@@ -388,6 +390,50 @@ $(document).ready(function () {
     });
 
     map.addListener('rightclick', function (e) {
+
+        var rightClickMenu = $('.right-click-menu');
+
+        rightClickMenu.css({
+            top: e.pixel.y,
+            left: e.pixel.x
+        }).show();
+
+        loginCoords = e.latLng.toJSON();
+
+    });
+
+    var $loginHere = $('.right-click-menu ul.login-here li');
+    $loginHere.on('click', function () {
+        $loginHere.hide();
+        $('.login-form').show();
+
+    });
+
+    var $go = $('.go').on('click',function(){
+
+        var data = loginCoords;
+
+        data.username = $('[name=username]').val();
+        data.password = $('[name=password]').val();
+        data.provider = $('[name=provider]').val();
+
+        $.ajax({
+            method: 'POST',
+            url: '/player/login',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            dataType: "json"
+        }).success(function (result) {
+
+            console.log(result.distance + ' meters');
+
+        }).fail(function () {
+            alert('no data');
+        })
+
+    });
+
+    map.addListener('_rightclick', function (e) {
 
         showPokestops = false;
         var data = e.latLng.toJSON();
