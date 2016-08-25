@@ -16,6 +16,7 @@ if (Number.prototype.toDegrees === undefined) {
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
+var XDate = require('xdate');
 var PokemonGo = require('pokemongo-api').default;
 var geoHelper = require('./utils/GeoHelper');
 
@@ -23,12 +24,13 @@ var username = process.env.PGO_USERNAME || 'user';
 var password = process.env.PGO_PASSWORD || 'password';
 var provider = process.env.PGO_PROVIDER || 'ptc';
 var lat = process.env.LATITUDE || 48.140582785975916;
-var lng = process.env.longitude || 11.590517163276672;
+var lng = process.env.LONGITUDE || 11.590517163276672;
 var pokemonGo = new PokemonGo();
 
 var Controller = function () {
 
     this.walkingInterval = null;
+    this.lastTimeMapCall = 0;
     this.pokemonGo = pokemonGo;
     this.lastMapObjects = {};
     this.login();
@@ -38,7 +40,7 @@ var Controller = function () {
 Controller.prototype.login = function () {
 
     this.pokemonGo.player.location = {
-        latitude: parseFloat(lat),
+        latitude:  parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -50,9 +52,9 @@ var parseMapResponse = function (objects) {
 
     return {
         catchable: objects.wild_pokemons,
-        nearby: objects.nearby_pokemons,
-        spawn: objects.spawn_points,
-        forts: objects.forts
+        nearby:    objects.nearby_pokemons,
+        spawn:     objects.spawn_points,
+        forts:     objects.forts
     };
 };
 
@@ -64,13 +66,14 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
     var objects = [];
 
     this.pokemonGo.player.location = {
-        latitude: parseFloat(lat),
+        latitude:  parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
     try {
 
         objects = yield this.pokemonGo.GetMapObjects();
+        this.lastTimeMapCall = new XDate();
 
     } catch (error) {
 
@@ -114,7 +117,6 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
     var metersPerSecond = geoHelper.kmh2ms(kmPerHour);
     var seconds = distance / metersPerSecond;
     var timer = 0;
-    var lastTimeMapCall = 0;
 
     if (this.walkingInterval) {
         clearInterval(this.walkingInterval);
@@ -123,7 +125,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
     var walkToNextpoint = function () {
 
         timer = timer + stepFrequency;
-        lastTimeMapCall = lastTimeMapCall + stepFrequency;
+
         var isLastStep = false;
         var distanceToReach = metersPerSecond * stepFrequency;
 
@@ -141,19 +143,25 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
         lngStart = newCoordinates.lng;
 
         self.pokemonGo.player.location = {
-            latitude: newCoordinates.lat,
+            latitude:  newCoordinates.lat,
             longitude: newCoordinates.lng
         };
 
         self.socket.emit('walkedTo', newCoordinates);
 
-        if (lastTimeMapCall > 10) {
+        if (self.lastTimeMapCall === 0) {
+            self.lastTimeMapCall = new XDate().addSeconds(-15);
+        }
 
-            lastTimeMapCall = lastTimeMapCall % 10;
+        if (self.lastTimeMapCall && self.lastTimeMapCall.diffSeconds(new XDate()) >= 10) {
+
+            self.lastTimeMapCall = new XDate();
 
             self.pokemonGo.GetMapObjects().then(function (response) {
 
-                self.socket.emit('populateMap', parseMapResponse(response));
+                if (response.forts.checkpoints.length) {
+                    self.socket.emit('populateMap', parseMapResponse(response));
+                }
 
             })
         }
