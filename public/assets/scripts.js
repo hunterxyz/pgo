@@ -1,12 +1,14 @@
 'use strict';
 var map = null;
-var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
-//var latLng = {lat: 48.102848, lng: 11.533405}; //FL
+// var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
+var latLng = {lat: 48.102848, lng: 11.533405}; //FL
 var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
 var gymMarkers = [];
 var coordinateMarkers = [];
+
+var showPokestops = true;
 
 var marker;
 var radarCircle;
@@ -18,7 +20,7 @@ var socket = io.connect('http://localhost:5050');
 
 socket.on('connect', function () {
 
-    socket.emit('stopWalking');
+    sendStopWalking();
 
     socket.on('walkedTo', function (response) {
 
@@ -35,6 +37,12 @@ socket.on('connect', function () {
     });
 
 });
+
+var sendStopWalking = function(){
+
+    socket.emit('stopWalking');
+
+};
 
 var ms2time = function msToTime(duration) {
 
@@ -301,7 +309,10 @@ var populateMap = function (objects) {
     createPokeMarkers(map, objects.catchable);
     updateNearbyRadar(objects.nearby);
     createSpawnMarkers(map, objects.spawn);
-    createPokestopMarkers(map, objects.forts.checkpoints);
+
+    if(showPokestops){
+        createPokestopMarkers(map, objects.forts.checkpoints);
+    }
 };
 
 $(document).ready(function () {
@@ -357,6 +368,10 @@ $(document).ready(function () {
 
     map.addListener('click', function (e) {
 
+        showPokestops = true;
+
+        sendStopWalking();
+
         $.ajax({
             url: 'getMapObjects',
             data: e.latLng.toJSON()
@@ -365,7 +380,6 @@ $(document).ready(function () {
             var latLng2 = e.latLng;
 
             moveMarkers(latLng2);
-            //populateMap(objects);
 
         }).fail(function () {
             alert('no data');
@@ -375,6 +389,7 @@ $(document).ready(function () {
 
     map.addListener('rightclick', function (e) {
 
+        showPokestops = false;
         var data = e.latLng.toJSON();
 
         clearCoordinates();
