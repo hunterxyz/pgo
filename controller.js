@@ -32,7 +32,6 @@ var Controller = function () {
     this.walkingInterval = null;
     this.lastTimeMapCall = 0;
     this.pokemonGo = pokemonGo;
-    this.lastMapObjects = {};
     this.login();
 
 };
@@ -92,11 +91,9 @@ Controller.prototype.getMapObjects = Q.async(function*(req, res) {
 
     if (objects.forts.checkpoints.length === 0) {
         res.status(500).send({});
+    } else {
+        this.socket.emit('populateMap', parseMapResponse(objects));
     }
-
-    this.lastMapObjects = parseMapResponse(objects);
-
-    this.socket.emit('populateMap', this.lastMapObjects);
 
     res.send({});
 
@@ -173,8 +170,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     res.send({distance: distance});
 
-})
-;
+});
 
 Controller.prototype.playerInfo = Q.async(function*(req, res) {
 
