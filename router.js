@@ -34,6 +34,8 @@ router.init = function (app) {
         app.post('/walkToPoint', wrapController(controller.walkToPoint));
         app.get('/playerinfo', wrapController(controller.playerInfo));
 
+        app.post('/player/login', wrapController(controller.playerLogin));
+
         controller.initSocketIOListeners();
 
         socket.on('hello', function (data) {
