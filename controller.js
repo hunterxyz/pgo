@@ -43,7 +43,6 @@ var Controller = function () {
     this.lastTimePlayerMapCall = 0;
     this.pokemonGo = pokemonGo;
     this.externalPlayer = externalPlayer;
-    this.lastMapObjects = {};
     this.login(lat, lng);
 
     this.playerUsername = 'user';

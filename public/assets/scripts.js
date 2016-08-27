@@ -117,7 +117,7 @@ var handleMarkerTimer = function (marker, pokeMarkers) {
 
     this.time_till_hidden_ms = this.time_till_hidden_ms - 1000;
 
-    if (this.time_till_hidden_ms < 0) {
+    if (this.time_till_hidden_ms <= 0) {
         clearInterval(this.interval);
         _.remove(pokeMarkers, marker);
         marker.setMap(null);
