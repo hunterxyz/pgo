@@ -13,6 +13,14 @@ if (Number.prototype.toDegrees === undefined) {
     };
 }
 
+function waitMs(time) {
+    return new Promise((resolve) => { // dont use reject
+        setTimeout(()=> {
+            resolve()
+        }, time)
+    })
+}
+
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
@@ -32,10 +40,15 @@ var Controller = function () {
 
     this.walkingInterval = null;
     this.lastTimeMapCall = 0;
+    this.lastTimePlayerMapCall = 0;
     this.pokemonGo = pokemonGo;
     this.externalPlayer = externalPlayer;
     this.lastMapObjects = {};
-    this.login();
+    this.login(lat, lng);
+
+    this.playerUsername = 'user';
+    this.playerPassword = 'password';
+    this.playerProvider = 'ptc';
 
 };
 
@@ -49,14 +62,33 @@ var parseMapResponse = function (objects) {
     };
 };
 
-Controller.prototype.login = function () {
+Controller.prototype.login = Q.async(function* (lat, lng, user) {
 
-    this.pokemonGo.player.location = {
+    var currentUser = this[user || 'pokemonGo'];
+
+    currentUser.player.location = {
         latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
-    return this.pokemonGo.login(username, password, provider);
+    var _username = user ? this.playerUsername : username;
+    var _password = user ? this.playerPassword : password;
+    var _provider = user ? this.playerProvider : provider;
+
+    var playerInfo = yield currentUser.login(_username, _password, _provider);
+
+    return parseInventory(playerInfo.inventory);
+
+});
+
+var parseInventory = function (inventory) {
+
+    return {
+        candies: inventory.candies,
+        pokemons: inventory.pokemons,
+        eggs: inventory.eggs,
+        items: inventory.items
+    };
 
 };
 
@@ -64,58 +96,115 @@ Controller.prototype.playerLogin = Q.async(function* (req, res) {
 
     var lat = req.body.lat;
     var lng = req.body.lng;
-    var username = req.body.username;
-    var password = req.body.password;
-    var provider = req.body.provider || 'ptc';
 
-    this.externalPlayer.player.location = {
-        latitude: parseFloat(lat),
-        longitude: parseFloat(lng)
-    };
+    this.playerUsername = req.body.username;
+    this.playerPassword = req.body.password;
+    this.playerProvider = req.body.provider || 'ptc';
 
-    var player = yield this.externalPlayer.login(username, password, provider);
+    var playerInventory = yield this.login(lat, lng, 'externalPlayer');
 
-    res.send(player.inventory);
+    res.send(playerInventory);
 
 });
 
-Controller.prototype.getMapObjects = Q.async(function*(req, res) {
+Controller.prototype.lootPokestop = Q.async(function* (req, res) {
 
-    lat = req.query.lat || lat;
-    lng = req.query.lng || lng;
+    var id = req.body.id;
+    var mapObjects = {};
+
+    if (this.lastTimePlayerMapCall === 0) {
+        this.lastTimePlayerMapCall = new XDate().addSeconds(-15);
+    }
+
+    var diffSeconds = this.lastTimePlayerMapCall.diffSeconds(new XDate());
+    if (diffSeconds >= 10) {
+
+        mapObjects = yield this.getMapObjects(this.externalPlayer.player.location.latitude, this.externalPlayer.player.location.longitude, 'externalPlayer');
+
+    } else {
+
+        yield waitMs((diffSeconds % 10) * 1000);
+        mapObjects = yield this.getMapObjects(this.externalPlayer.player.location.latitude, this.externalPlayer.player.location.longitude, 'externalPlayer');
+
+    }
+
+    if (mapObjects) {
+
+        var pokeStop = _.find(mapObjects.forts.checkpoints, function (checkpoint) {
+            var isNotCoolDown = !checkpoint.cooldown;
+            var matchedId = checkpoint.id === id;
+
+            return isNotCoolDown && matchedId;
+
+        });
+
+        if (pokeStop) {
+            let loot = yield pokeStop.search();
+
+            res.send(loot)
+
+        } else {
+            res.send({error: 'Too far away'});
+            //res.send({error: 'Try Later'});
+        }
+
+    } else {
+        res.send({error: 'No Data'});
+    }
+
+
+    // Collect pokestop rewards
+    //
+    // console.log(res)
+
+});
+
+Controller.prototype.getMapObjects = Q.async(function* (lat, lng, user) {
 
     var objects = [];
+    var currentUser = this[user || 'pokemonGo'];
 
-    this.pokemonGo.player.location = {
+    currentUser.player.location = {
         latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
     try {
 
-        objects = yield this.pokemonGo.GetMapObjects();
-        this.lastTimeMapCall = new XDate();
+        objects = yield currentUser.GetMapObjects();
+        if (user) {
+            this.lastTimePlayerMapCall = new XDate();
+        } else {
+            this.lastTimeMapCall = new XDate();
+        }
 
     } catch (error) {
 
         console.log(error);
         if (error.message === 'Illegal buffer') {
 
-            this.pokemonGo = new PokemonGo();
+            currentUser = new PokemonGo();
 
-            yield this.login();
+            yield this.login(lat, lng, user);
 
-            yield this.getMapObjects(req, res);
+            yield this.getMapObjects(lat, lng, user);
 
         }
 
     }
 
-    if (objects.forts.checkpoints.length === 0) {
-        res.status(500).send({});
-    } else {
+    if (objects.forts && objects.forts.checkpoints.length) {
         this.socket.emit('populateMap', parseMapResponse(objects, {lat: lat, lng: lng}));
+
+        return objects;
+
     }
+
+});
+
+Controller.prototype.getMapObjectsRoute = Q.async(function*(req, res, user) {
+
+    this.getMapObjects(req.query.lat, req.query.lng, user);
 
     res.send({});
 
@@ -129,8 +218,8 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
     let kmPerHour = req.body.kmh || 50;
     let stepFrequency = req.body.stepFrequency || 1; //seconds
 
-    var latStart = this.pokemonGo.player.location.latitude;
-    var lngStart = this.pokemonGo.player.location.longitude;
+    var latStart = this.externalPlayer.player.location.latitude;
+    var lngStart = this.externalPlayer.player.location.longitude;
     var distance = geoHelper.getDistance(latStart, lngStart, lat, lng);
 
     var metersPerSecond = geoHelper.kmh2ms(kmPerHour);
@@ -161,7 +250,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
         latStart = newCoordinates.lat;
         lngStart = newCoordinates.lng;
 
-        self.pokemonGo.player.location = {
+        self.externalPlayer.player.location = {
             latitude: newCoordinates.lat,
             longitude: newCoordinates.lng
         };
@@ -178,7 +267,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
             self.lastTimeMapCall = new XDate();
 
-            self.pokemonGo.GetMapObjects().then(function (response) {
+            self.externalPlayer.GetMapObjects().then(function (response) {
 
                 if (response.forts.checkpoints.length) {
                     self.socket.emit('populateMap', parseMapResponse(response, coordinatesToSend));
@@ -194,14 +283,8 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     res.send({distance: distance});
 
-})
-;
-
-Controller.prototype.playerInfo = Q.async(function*(req, res) {
-
-    res.send(pokemonGo.player);
-
 });
+
 
 Controller.prototype.setSocket = function (socket) {
 

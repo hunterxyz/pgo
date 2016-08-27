@@ -11,6 +11,7 @@ var coordinateMarkers = [];
 var showPokestops = true;
 
 var marker;
+var playerMarker;
 var radarCircle;
 var pokemonInteractionCircle;
 var interactionCircle;
@@ -131,6 +132,26 @@ var handleMarkerTimer = function (marker, pokeMarkers) {
 var clickOnPokemon = function () {
 
     console.log(this.pokemon);
+
+};
+
+var clickOnPokeStop = function () {
+
+    var psid = this.pokestop.id;
+
+    $.ajax({
+        method: 'POST',
+        url: '/player/lootpokestop',
+        data: JSON.stringify({id:psid}),
+        contentType: 'application/json',
+        dataType: "json"
+    }).success(function (result) {
+
+        console.log(result);
+
+    }).fail(function () {
+        alert('no data');
+    })
 
 };
 
@@ -268,12 +289,14 @@ var createPokestopMarker = function (map, pokestop) {
         position: {lat: pokestop.latitude, lng: pokestop.longitude},
         map: map,
         icon: image,
-        clickable: false,
+        clickable: true,
         pokestop: pokestop,
         zIndex: 0
     });
 
     marker.setMap(map);
+
+    marker.addListener('click', $.proxy(clickOnPokeStop, marker));
 
     pokestopMarkers.push(marker);
 
@@ -329,6 +352,18 @@ $(document).ready(function () {
         map: map
     });
 
+    var playerMarkerImage = {
+        url: '/assets/images/pokemarker.png',
+        size: new google.maps.Size(179, 250),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(15, 40),
+        scaledSize: new google.maps.Size(29, 40)
+    };
+
+    playerMarker = new google.maps.Marker({
+        icon: playerMarkerImage
+    });
+
     radarCircle = new google.maps.Circle({
         strokeWeight: 0,
         fillColor: '#FF0000',
@@ -368,7 +403,7 @@ $(document).ready(function () {
         zIndex: 1
     });
 
-    map.addListener('click', function (e) {
+    var scanMapLatLng = function (e) {
 
         showPokestops = true;
 
@@ -387,9 +422,11 @@ $(document).ready(function () {
             alert('no data');
         })
 
-    });
+    };
 
-    map.addListener('rightclick', function (e) {
+    var scanMapLatLngListener = map.addListener('click', scanMapLatLng);
+
+    var loginMenuListener = map.addListener('rightclick', function (e) {
 
         var rightClickMenu = $('.right-click-menu');
 
@@ -400,6 +437,17 @@ $(document).ready(function () {
 
         loginCoords = e.latLng.toJSON();
 
+        scanMapLatLngListener.remove();
+
+        var closeMenuListener = map.addListener('click', function (e) {
+            $('.login-form').hide();
+            rightClickMenu.hide();
+
+            closeMenuListener.remove();
+            scanMapLatLngListener = map.addListener('click', scanMapLatLng);
+
+        });
+
     });
 
     var $loginHere = $('.right-click-menu ul.login-here li');
@@ -409,7 +457,7 @@ $(document).ready(function () {
 
     });
 
-    var $go = $('.go').on('click',function(){
+    var $go = $('.go').on('click', function () {
 
         var data = loginCoords;
 
@@ -425,11 +473,14 @@ $(document).ready(function () {
             dataType: "json"
         }).success(function (result) {
 
-            console.log(result.distance + ' meters');
+            loginMenuListener.remove();
+            $('.right-click-menu').hide();
+            playerMarker.setPosition(loginCoords);
+            playerMarker.setMap(map)
 
         }).fail(function () {
             alert('no data');
-        })
+        });
 
     });
 
