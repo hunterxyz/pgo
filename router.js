@@ -30,17 +30,13 @@ router.init = function (app) {
 
         controller.setSocket(socket);
 
-        app.get('/getMapObjects', wrapController(controller.getMapObjects));
+        app.get('/getMapObjects', wrapController(controller.getMapObjectsRoute));
         app.post('/walkToPoint', wrapController(controller.walkToPoint));
-        app.get('/playerinfo', wrapController(controller.playerInfo));
 
         app.post('/player/login', wrapController(controller.playerLogin));
+        app.post('/player/lootpokestop', wrapController(controller.lootPokestop));
 
         controller.initSocketIOListeners();
-
-        socket.on('hello', function (data) {
-            socket.emit('hello', {message: 'hello'});
-        });
 
     });
 
