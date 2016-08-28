@@ -35,6 +35,7 @@ router.init = function (app) {
         app.post('/moveto', wrapController(controller.moveTo));
         app.post('/player/login', wrapController(controller.playerLogin));
         app.post('/player/lootpokestop', wrapController(controller.lootPokestop));
+        app.post('/player/recycle', wrapController(controller.recycleRoute));
 
         app.get('/amilogged/:user',wrapController(controller.amILoggedRoute));
 

@@ -280,6 +280,7 @@ var updatePlayerStatus = function (result) {
     $('.player-status').show();
 
     var nextLevel = result.player.next_level_xp;
+    //var prevLevel = result.player.prev_level_xp;
     var exp = result.player.experience;
 
     var percentage = exp * 100 / nextLevel;
@@ -294,10 +295,12 @@ var updatePlayerStatus = function (result) {
     var $itemImage = $('<td><img/></td>').addClass('item-image');
     var $itemCount = $('<td><div class="item-count"></td>');
     var $itemSelection = $('<td/>').addClass('item-selection');
+    var $itemRecycle = $('<td><input value="0" data-item-id=""/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
 
     $itemrow.append($itemImage);
     $itemrow.append($itemCount);
     $itemrow.append($itemSelection);
+    $itemrow.append($itemRecycle);
 
     _.each(result.inventory.items, function (item, k) {
         if (item.count) {
@@ -309,19 +312,44 @@ var updatePlayerStatus = function (result) {
 
             var itemSelection = $item.find('.item-selection');
             var input = $('<input type="checkbox" class="item-selection"/>');
+            var $itemRecycleButton = $item.find('.item-recycle button');
 
             if (k.match(/ball/i)) {
                 input.attr('type', 'radio').attr('name', 'ball');
 
-                if (k.match(/poke/i)){
+                if (k.match(/poke/i)) {
                     input.attr('checked', true);
                 }
 
                 itemSelection.append(input);
-            } else if (k.match(/berry/i)){
+            } else if (k.match(/berry/i)) {
                 input.attr('type', 'checkbox').attr('name', 'berry');
                 itemSelection.append(input);
+            } else if(k.match(/unlimited/i)){
+                $item.find('.item-recycle input').remove();
+                $itemRecycleButton.remove();
+                $item.find('.item-count').text('∞');
             }
+
+
+            $itemRecycleButton.data('item-id', item.item_id).on('click', function () {
+
+                var $input = $itemRecycleButton.parent().find('input');
+                var data = {item_id: $itemRecycleButton.data('itemId'), count: $input.val()};
+
+                if (data.count > 0) {
+                    $.ajax({
+                        method: 'POST',
+                        url: '/player/recycle',
+                        data: JSON.stringify(data),
+                        contentType: 'application/json',
+                        dataType: 'json'
+                    }).success(function (result) {
+                        updatePlayerStatus(result);
+                    });
+                }
+
+            });
 
             $backpack.append($item);
         }
@@ -392,7 +420,7 @@ var updateCooldown = function (marker, pokestop) {
 
     var remainingTime = new XDate().diffMilliseconds(new XDate(pokestop.cooldown));
 
-    resetPokestopIconIn(marker, remainingTime);
+    resetPokestopIconIn(marker, Math.abs(remainingTime));
 
 };
 

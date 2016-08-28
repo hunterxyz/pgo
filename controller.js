@@ -26,6 +26,13 @@ var Q = require('q');
 var _ = require('lodash');
 //var XDate = require('xdate');
 var PokemonGo = require('pokemongo-api').default;
+
+PokemonGo.prototype.recycle = Q.async(function* (item_id, count) {
+
+    return yield this.Call([{request: 'RECYCLE_INVENTORY_ITEM', message: {item_id, count}}]);
+
+});
+
 var geoHelper = require('./utils/GeoHelper');
 
 var botUsername = process.env.PGO_USERNAME || 'user';
@@ -108,9 +115,7 @@ var Controller = function () {
     this.externalPlayerMapObjects = {};
 
     this.pokemonGo = null;
-    this.pokemonGoInfo = {};
     this.externalPlayer = null;
-    this.externalPlayerInfo = {};
 
     this.login(lat, lng);
 
@@ -126,7 +131,7 @@ Controller.prototype.amILoggedRoute = function (req, res) {
 
     if (user && user.player && user.player.location) {
 
-        var response = this[req.params.user + 'Info'];
+        var response = serialize(this[req.params.user]);
 
         response.location = {lat: user.player.location.latitude, lng: user.player.location.longitude};
 
@@ -202,11 +207,23 @@ Controller.prototype.login = Q.async(function* (lat, lng, user, doNotScan) {
 
     var serializedPlayer = serialize(playerInfo);
 
-    this[currentUserString + 'Info'] = serializedPlayer;
-
     return serializedPlayer;
 
 });
+
+Controller.prototype.recycleRoute = Q.async(function* (req, res) {
+
+    var item_id = req.body.item_id;
+    var count = Number(req.body.count);
+
+    yield this.externalPlayer.recycle(item_id,count);
+
+    yield this.externalPlayer.inventory.update();
+
+    res.send(serialize(this.externalPlayer));
+
+});
+
 
 Controller.prototype.playerLogin = Q.async(function* (req, res) {
 
