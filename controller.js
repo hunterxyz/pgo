@@ -13,18 +13,18 @@ if (Number.prototype.toDegrees === undefined) {
     };
 }
 
-function waitMs(time) {
-    return new Promise((resolve) => { // dont use reject
-        setTimeout(()=> {
-            resolve()
-        }, time)
-    })
-}
+//function waitMs(time) {
+//    return new Promise((resolve) => { // dont use reject
+//        setTimeout(()=> {
+//            resolve();
+//        }, time);
+//    });
+//}
 
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
-var XDate = require('xdate');
+//var XDate = require('xdate');
 var PokemonGo = require('pokemongo-api').default;
 var geoHelper = require('./utils/GeoHelper');
 
@@ -46,7 +46,63 @@ var parseMapResponse = function (objects, user, coordinates) {
     };
 };
 
+var serialize = function (toSerialize) {
+
+    var value;
+    var json = {};
+    var excludedKeys = [
+        'api',
+        'parent',
+        'logged',
+        'logging',
+        'loginCache',
+        'playerInfo',
+        'buffer',
+        'requestInterval',
+        'useHeartBeat',
+        'Auth',
+        'debug',
+        'lastObjectsCall'
+    ];
+
+    for (var key in toSerialize) {
+        if (toSerialize.hasOwnProperty(key)) {
+
+            if (excludedKeys.indexOf(key) !== -1) {
+                continue;
+            }
+
+            value = toSerialize[key];
+
+            if (value === 'toString') {
+                continue;
+            }
+
+            if (value instanceof Function) {
+                continue;
+            }
+
+            if (typeof value === 'object') {
+
+                if (value.high !== undefined && value.low !== undefined && value.toNumber) {
+                    value = value.toNumber();
+                } else if (!Array.isArray(value)) {
+                    value = serialize(value);
+                }
+
+            }
+
+            json[key] = value;
+        }
+    }
+
+    return json;
+
+};
+
 var Controller = function () {
+
+    var self = this;
 
     this.walkingInterval = null;
 
@@ -54,8 +110,15 @@ var Controller = function () {
     this.externalPlayerMapObjects = {};
 
     this.pokemonGo = null;
+    this.pokemonGoInfo = {};
     this.externalPlayer = null;
-    this.login(lat, lng);
+    this.externalPlayerInfo = {};
+
+    this.login(lat, lng).then(function (result) {
+
+        self.pokemonGoInfo = result;
+
+    });
 
     this.playerUsername = 'user';
     this.playerPassword = 'password';
@@ -63,21 +126,17 @@ var Controller = function () {
 
 };
 
-Controller.prototype.amILoggedRoute = Q.async(function* (req, res) {
+Controller.prototype.amILoggedRoute = function (req, res) {
 
     var user = this[req.params.user];
 
-    var userLocation = {latitude: null, longitude: null};
-
     if (user && user.player && user.player.location) {
-        userLocation = user.player.location;
-        res.send({loggedAt: userLocation})
+        res.send({location: user.player.location, info: this[req.params.user + 'info']});
     } else {
-        res.status(500).send({loggedAt: userLocation})
+        res.status(500).send({});
     }
 
-
-});
+};
 
 Controller.prototype.startMapScanner = function (user) {
 
@@ -85,7 +144,8 @@ Controller.prototype.startMapScanner = function (user) {
 
     setInterval(function () {
 
-        var currentUser = self[user || 'pokemonGo'];
+        var currentUserString = user || 'pokemonGo';
+        var currentUser = self[currentUserString];
 
         currentUser.GetMapObjects().then(function (objects) {
 
@@ -105,7 +165,11 @@ Controller.prototype.startMapScanner = function (user) {
 
             if (result.message === 'Illegal buffer') {
 
-                self.login(currentUser.player.location.latitude, currentUser.player.location.longitude, user || 'pokemonGo', true);
+                self.login(currentUser.player.location.latitude, currentUser.player.location.longitude, user || 'pokemonGo', true).then(function (loginResult) {
+
+                    self[currentUserString + 'Info'] = loginResult;
+
+                });
 
             }
 
@@ -117,43 +181,34 @@ Controller.prototype.startMapScanner = function (user) {
 
 Controller.prototype.login = Q.async(function* (lat, lng, user, doNotScan) {
 
-    var user = user || 'pokemonGo';
+    var currentUserString = user || 'pokemonGo';
 
-    this[user] = new PokemonGo();
+    this[currentUserString] = new PokemonGo();
 
-    var currentUser = this[user];
+    var currentUser = this[currentUserString];
 
     currentUser.player.location = {
         latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
-    var _username = user !== 'pokemonGo' ? this.playerUsername : botUsername;
-    var _password = user !== 'pokemonGo' ? this.playerPassword : botPassword;
-    var _provider = user !== 'pokemonGo' ? this.playerProvider : botProvider;
+    var _username = currentUserString !== 'pokemonGo' ? this.playerUsername : botUsername;
+    var _password = currentUserString !== 'pokemonGo' ? this.playerPassword : botPassword;
+    var _provider = currentUserString !== 'pokemonGo' ? this.playerProvider : botProvider;
 
     var playerInfo = yield currentUser.login(_username, _password, _provider);
 
     currentUser.logged = true;
 
     if (!doNotScan) {
-        this.startMapScanner(user);
+        this.startMapScanner(currentUserString);
     }
 
-    return parseInventory(playerInfo.inventory);
+    var serializedPlayer = serialize(playerInfo);
+
+    return serializedPlayer;
 
 });
-
-var parseInventory = function (inventory) {
-
-    return {
-        candies: inventory.candies,
-        pokemons: inventory.pokemons,
-        eggs: inventory.eggs,
-        items: inventory.items
-    };
-
-};
 
 Controller.prototype.playerLogin = Q.async(function* (req, res) {
 
@@ -173,7 +228,6 @@ Controller.prototype.playerLogin = Q.async(function* (req, res) {
 Controller.prototype.lootPokestop = Q.async(function* (req, res) {
 
     var id = req.body.id;
-    var mapObjects = {};
 
     if (this.externalPlayerMapObjects) {
 
@@ -188,7 +242,7 @@ Controller.prototype.lootPokestop = Q.async(function* (req, res) {
         if (pokeStop) {
             let loot = yield pokeStop.search();
 
-            res.send(loot)
+            res.send(loot);
 
         } else {
             res.send({error: 'Too far away'});
@@ -199,14 +253,9 @@ Controller.prototype.lootPokestop = Q.async(function* (req, res) {
         res.send({error: 'No Data'});
     }
 
-
-    // Collect pokestop rewards
-    //
-    // console.log(res)
-
 });
 
-Controller.prototype.walkToPoint = Q.async(function*(req, res) {
+Controller.prototype.walkToPoint = function (req, res) {
 
     var self = this;
     let lat = req.body.lat;
@@ -261,7 +310,7 @@ Controller.prototype.walkToPoint = Q.async(function*(req, res) {
 
     res.send({distance: distance});
 
-});
+};
 
 
 Controller.prototype.setSocket = function (socket) {
@@ -284,7 +333,7 @@ Controller.prototype.initSocketIOListeners = function () {
         self.pokemonGo.player.location = {
             latitude: latLng.lat,
             longitude: latLng.lng
-        }
+        };
     });
 
 };

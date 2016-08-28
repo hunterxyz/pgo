@@ -5,7 +5,7 @@ var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
 var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
-var gymMarkers = [];
+//var gymMarkers = [];
 var coordinateMarkers = [];
 var mapHistory = [];
 
@@ -20,30 +20,33 @@ var loginMenuListener;
 
 var socket = io.connect('http://localhost:5050');
 
-socket.on('connect', function () {
-
-    sendStopWalking();
-
-    socket.on('walkedTo', function (response) {
-
-        drawCoordinates(response);
-        playerMarker.setPosition(response);
-        moveMarkers(response);
-
-    });
-
-    socket.on('populateMap', function (objects) {
-
-        console.log(objects);
-        populateMap(objects);
-
-    });
-
-});
-
 var sendStopWalking = function () {
 
     socket.emit('stopWalking');
+
+};
+
+var drawCoordinates = function (coordinates) {
+
+    var coordinateMarker = new google.maps.Marker({
+        position: {lat: coordinates.lat, lng: coordinates.lng},
+        map: map,
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 2
+        },
+        zIndex: 1
+    });
+
+    coordinateMarkers.push(coordinateMarker);
+
+};
+
+var moveMarkers = function (latLng) {
+
+    radarCircle.setCenter(latLng);
+    pokemonInteractionCircle.setCenter(latLng);
+    interactionCircle.setCenter(latLng);
 
 };
 
@@ -85,21 +88,15 @@ var clearCoordinates = function () {
 
 };
 
-var drawCoordinates = function (coordinates) {
+function isPokemonOnMap(pokemon) {
 
-    var coordinateMarker = new google.maps.Marker({
-        position: {lat: coordinates.lat, lng: coordinates.lng},
-        map: map,
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 2
-        },
-        zIndex: 1
+    return _.find(pokeMarkers, function (pokeMarker) {
+
+        return pokeMarker.pokemon.spawn_point_id === pokemon.spawn_point_id;
+
     });
 
-    coordinateMarkers.push(coordinateMarker);
-
-};
+}
 
 var handleMarkerTimer = function (marker, pokeMarkers) {
 
@@ -135,63 +132,6 @@ var clickOnPokemon = function () {
 
 };
 
-var parseLoot = function (loot) {
-
-    var reward = loot.FortSearchResponse;
-
-    console.log(reward);
-
-};
-
-var clickOnPokeStop = function (event) {
-
-    var psid = this.pokestop.id;
-    var marker = this;
-
-    $.ajax({
-        method: 'POST',
-        url: '/player/lootpokestop',
-        data: JSON.stringify({id: psid}),
-        contentType: 'application/json',
-        dataType: "json"
-    }).success(function (result) {
-
-        if (result.error){
-            return;
-        }
-
-        parseLoot(result);
-
-        var image = {
-            url: '/assets/images/pokestop-pink.png',
-            size: new google.maps.Size(94, 200),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(12, 50),
-            scaledSize: new google.maps.Size(23, 50)
-        };
-
-        marker.setIcon(image);
-
-        setTimeout(function () {
-
-            var image = {
-                url: '/assets/images/pokestop.png',
-                size: new google.maps.Size(94, 200),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(12, 50),
-                scaledSize: new google.maps.Size(23, 50)
-            };
-
-            marker.setIcon(image);
-
-        }, 5 * 1000 * 60);
-
-    }).fail(function () {
-        alert('no data');
-    })
-
-};
-
 var createPokeMarkers = function (map, markers) {
 
     for (var j = 0; j < markers.length; j++) {
@@ -199,9 +139,7 @@ var createPokeMarkers = function (map, markers) {
         var pokemon = markers[j];
         var title = ms2time(pokemon.time_till_hidden_ms);
 
-        var pokemonOnMap = _.find(pokeMarkers, function (pokeMarker) {
-            return pokeMarker.pokemon.spawn_point_id === pokemon.spawn_point_id;
-        });
+        var pokemonOnMap = isPokemonOnMap(pokemon);
 
         if (pokemonOnMap && pokemonOnMap.pokemon.time_till_hidden_ms < 0 && pokemon.time_till_hidden_ms > 0) {
             pokemonOnMap.setMap(null);
@@ -246,33 +184,6 @@ var createPokeMarkers = function (map, markers) {
 
 };
 
-var createSpawnMarkers = function (map, markers) {
-
-    _.each(markers, function (marker) {
-
-        if (Array.isArray(marker)) {
-            _.each(marker, function (subMarker) {
-
-                if (!_.some(spawnMarkers, function (spawnMarker) {
-                        spawnMarker.latitude === subMarker.latitude && spawnMarker.longitude === subMarker.longitude;
-                    })) {
-                    createSpawnMarker(map, subMarker);
-                }
-
-            });
-
-        } else {
-
-            if (!_.some(spawnMarkers, function (spawnMarker) {
-                    spawnMarker.latitude === marker.latitude && spawnMarker.longitude === marker.longitude;
-                })) {
-                createSpawnMarker(map, marker);
-            }
-        }
-
-    });
-};
-
 var createSpawnMarker = function (map, spawnPoint) {
 
     var image = {
@@ -298,18 +209,88 @@ var createSpawnMarker = function (map, spawnPoint) {
 
 };
 
-var createPokestopMarkers = function (map, markers) {
+var createSpawnMarkers = function (map, markers) {
 
     _.each(markers, function (marker) {
 
-        var noMarkerFound = !_.some(pokestopMarkers, function (pokestopMarker) {
-            return pokestopMarker.pokestop.id === marker.id;
-        });
+        if (Array.isArray(marker)) {
+            _.each(marker, function (subMarker) {
 
-        if (noMarkerFound) {
-            createPokestopMarker(map, marker);
+                if (!_.some(spawnMarkers, function (spawnMarker) {
+                        return spawnMarker.latitude === subMarker.latitude && spawnMarker.longitude === subMarker.longitude;
+                    })) {
+                    createSpawnMarker(map, subMarker);
+                }
+
+            });
+
+        } else {
+
+            if (!_.some(spawnMarkers, function (spawnMarker) {
+                    return spawnMarker.latitude === marker.latitude && spawnMarker.longitude === marker.longitude;
+                })) {
+                createSpawnMarker(map, marker);
+            }
         }
+
     });
+};
+
+var parseLoot = function (loot) {
+
+    var reward = loot.FortSearchResponse;
+
+    console.log(reward);
+
+};
+
+var clickOnPokeStop = function () {
+
+    var psid = this.pokestop.id;
+    var marker = this;
+
+    $.ajax({
+        method: 'POST',
+        url: '/player/lootpokestop',
+        data: JSON.stringify({id: psid}),
+        contentType: 'application/json',
+        dataType: 'json'
+    }).success(function (result) {
+
+        if (result.error) {
+            return;
+        }
+
+        parseLoot(result);
+
+        var image = {
+            url: '/assets/images/pokestop-pink.png',
+            size: new google.maps.Size(94, 200),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(12, 50),
+            scaledSize: new google.maps.Size(23, 50)
+        };
+
+        marker.setIcon(image);
+
+        setTimeout(function () {
+
+            var image = {
+                url: '/assets/images/pokestop.png',
+                size: new google.maps.Size(94, 200),
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(12, 50),
+                scaledSize: new google.maps.Size(23, 50)
+            };
+
+            marker.setIcon(image);
+
+        }, 5 * 1000 * 60);
+
+    }).fail(function () {
+        alert('no data');
+    });
+
 };
 
 var createPokestopMarker = function (map, pokestop) {
@@ -339,6 +320,20 @@ var createPokestopMarker = function (map, pokestop) {
 
 };
 
+var createPokestopMarkers = function (map, markers) {
+
+    _.each(markers, function (marker) {
+
+        var noMarkerFound = !_.some(pokestopMarkers, function (pokestopMarker) {
+            return pokestopMarker.pokestop.id === marker.id;
+        });
+
+        if (noMarkerFound) {
+            createPokestopMarker(map, marker);
+        }
+    });
+};
+
 var updateNearbyRadar = function (nearbyPokemons) {
 
     var nearbyPlaceholder = $('.nearby');
@@ -358,14 +353,6 @@ var updateNearbyRadar = function (nearbyPokemons) {
 
 };
 
-var moveMarkers = function (latLng) {
-
-    radarCircle.setCenter(latLng);
-    pokemonInteractionCircle.setCenter(latLng);
-    interactionCircle.setCenter(latLng);
-
-};
-
 var populateMap = function (objects) {
 
     createPokeMarkers(map, objects.catchable);
@@ -380,6 +367,27 @@ var populateMap = function (objects) {
     mapHistory.push(objects);
 
 };
+
+socket.on('connect', function () {
+
+    sendStopWalking();
+
+    socket.on('walkedTo', function (response) {
+
+        drawCoordinates(response);
+        playerMarker.setPosition(response);
+        moveMarkers(response);
+
+    });
+
+    socket.on('populateMap', function (objects) {
+
+        console.log(objects);
+        populateMap(objects);
+
+    });
+
+});
 
 function afterLogin(coords) {
 
@@ -400,23 +408,23 @@ function afterLogin(coords) {
         data.kmh = Number($('select[name=speed]').val());
         data.stepFrequency = Number($('select[name=freq]').val());
 
-
         $.ajax({
             method: 'POST',
             url: 'walktoPoint',
             data: JSON.stringify(data),
             contentType: 'application/json',
-            dataType: "json"
+            dataType: 'json'
         }).success(function (result) {
 
             console.log(result.distance + ' meters');
 
         }).fail(function () {
             alert('no data');
-        })
+        });
 
     });
 }
+
 $(document).ready(function () {
 
     var loginCoords;
@@ -461,10 +469,10 @@ $(document).ready(function () {
         method: 'GET',
         url: '/amilogged/pokemonGo',
         contentType: 'application/json',
-        dataType: "json"
+        dataType: 'json'
     }).success(function (result) {
 
-        var latLng = {lat: result.loggedAt.latitude, lng: result.loggedAt.longitude};
+        var latLng = {lat: result.location.latitude, lng: result.location.longitude};
 
         marker.setPosition(latLng);
         moveMarkers(latLng);
@@ -478,6 +486,16 @@ $(document).ready(function () {
         anchor: new google.maps.Point(15, 40),
         scaledSize: new google.maps.Size(29, 40)
     };
+
+    var scanMapLatLngListener = map.addListener('click', function (e) {
+
+        var latLng = e.latLng;
+
+        socket.emit('moveTo', latLng.toJSON());
+        marker.setPosition(latLng);
+        moveMarkers(latLng);
+
+    });
 
     playerMarker = new google.maps.Marker({
         icon: playerMarkerImage,
@@ -506,7 +524,8 @@ $(document).ready(function () {
 
         scanMapLatLngListener.remove();
 
-        var closeMenuListener = map.addListener('click', function (e) {
+        var closeMenuListener = map.addListener('click', function () {
+
             $('.login-form').hide();
             rightClickMenu.hide();
 
@@ -528,36 +547,27 @@ $(document).ready(function () {
         method: 'GET',
         url: '/amilogged/externalPlayer',
         contentType: 'application/json',
-        dataType: "json"
+        dataType: 'json'
     }).success(function (result) {
 
-        var coordinates = {lat: result.loggedAt.latitude,lng: result.loggedAt.longitude};
+        var coordinates = {lat: result.location.latitude, lng: result.location.longitude};
 
         afterLogin(coordinates);
 
-    }).fail(function(){
+    }).fail(function () {
 
-
-    });
-
-    var scanMapLatLngListener = map.addListener('click', function (e) {
-
-        var latLng = e.latLng;
-
-        socket.emit('moveTo',latLng.toJSON());
-        marker.setPosition(latLng);
-        moveMarkers(latLng);
 
     });
 
     var $loginHere = $('.right-click-menu ul.login-here li');
+
     $loginHere.on('click', function () {
         $loginHere.hide();
         $('.login-form').show();
 
     });
 
-    var $go = $('.go').on('click', function () {
+    $('.go').on('click', function () {
 
         var data = loginCoords;
 
@@ -570,10 +580,10 @@ $(document).ready(function () {
             url: '/player/login',
             data: JSON.stringify(data),
             contentType: 'application/json',
-            dataType: "json"
+            dataType: 'json'
         }).success(function (result) {
 
-            var coordinates = {lat: result.lat,lng: result.lng};
+            var coordinates = {lat: result.lat, lng: result.lng};
 
             afterLogin(coordinates);
 
