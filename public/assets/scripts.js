@@ -42,7 +42,7 @@ var drawCoordinates = function (coordinates) {
 
 };
 
-var moveMarkers = function (latLng) {
+var moveCircles = function (latLng) {
 
     radarCircle.setCenter(latLng);
     pokemonInteractionCircle.setCenter(latLng);
@@ -244,6 +244,91 @@ var parseLoot = function (loot) {
 
 };
 
+var resetPokestopIconIn = function (marker, timeout) {
+
+    clearTimeout(marker.timeout);
+
+    var image = {
+        url: '/assets/images/pokestop-pink.png',
+        size: new google.maps.Size(94, 200),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(12, 50),
+        scaledSize: new google.maps.Size(23, 50)
+    };
+
+    marker.setIcon(image);
+
+    marker.timeout = setTimeout(function () {
+
+        var image = {
+            url: '/assets/images/pokestop.png',
+            size: new google.maps.Size(94, 200),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(12, 50),
+            scaledSize: new google.maps.Size(23, 50)
+        };
+
+        marker.setIcon(image);
+
+    }, timeout);
+
+};
+
+var updatePlayerStatus = function (result) {
+
+    $('.player-status .level').text(result.player.level);
+    $('.player-status').show();
+
+    var nextLevel = result.player.next_level_xp;
+    var exp = result.player.experience;
+
+    var percentage = exp * 100 / nextLevel;
+
+    $('.player-status .exp-level').css({
+        width: percentage + '%'
+    });
+
+    var $item;
+    var $backpack = $('.backpack tbody').html('');
+    var $itemrow = $('<tr/>').addClass('item');
+    var $itemImage = $('<td><img/></td>').addClass('item-image');
+    var $itemCount = $('<td><div class="item-count"></td>');
+    var $itemSelection = $('<td/>').addClass('item-selection');
+
+    $itemrow.append($itemImage);
+    $itemrow.append($itemCount);
+    $itemrow.append($itemSelection);
+
+    _.each(result.inventory.items, function (item, k) {
+        if (item.count) {
+
+            $item = $itemrow.clone();
+
+            $item.find('img').attr('src', '/assets/images/items/' + k + '.png');
+            $item.find('.item-count').text(item.count);
+
+            var itemSelection = $item.find('.item-selection');
+            var input = $('<input type="checkbox" class="item-selection"/>');
+
+            if (k.match(/ball/i)) {
+                input.attr('type', 'radio').attr('name', 'ball');
+
+                if (k.match(/poke/i)){
+                    input.attr('checked', true);
+                }
+
+                itemSelection.append(input);
+            } else if (k.match(/berry/i)){
+                input.attr('type', 'checkbox').attr('name', 'berry');
+                itemSelection.append(input);
+            }
+
+            $backpack.append($item);
+        }
+    });
+
+};
+
 var clickOnPokeStop = function () {
 
     var psid = this.pokestop.id;
@@ -257,35 +342,18 @@ var clickOnPokeStop = function () {
         dataType: 'json'
     }).success(function (result) {
 
-        if (result.error) {
+        if (!result.loot || result.error) {
             return;
         }
 
-        parseLoot(result);
+        if (result.loot.result === 4) {
+            alert('Your backpack is full');
+        }
 
-        var image = {
-            url: '/assets/images/pokestop-pink.png',
-            size: new google.maps.Size(94, 200),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(12, 50),
-            scaledSize: new google.maps.Size(23, 50)
-        };
+        parseLoot(result.loot);
+        updatePlayerStatus(result.playerInfo);
 
-        marker.setIcon(image);
-
-        setTimeout(function () {
-
-            var image = {
-                url: '/assets/images/pokestop.png',
-                size: new google.maps.Size(94, 200),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(12, 50),
-                scaledSize: new google.maps.Size(23, 50)
-            };
-
-            marker.setIcon(image);
-
-        }, 5 * 1000 * 60);
+        resetPokestopIconIn(marker, 5 * 1000 * 60);
 
     }).fail(function () {
         alert('no data');
@@ -320,17 +388,28 @@ var createPokestopMarker = function (map, pokestop) {
 
 };
 
-var createPokestopMarkers = function (map, markers) {
+var updateCooldown = function (marker, pokestop) {
 
-    _.each(markers, function (marker) {
+    var remainingTime = new XDate().diffMilliseconds(new XDate(pokestop.cooldown));
 
-        var noMarkerFound = !_.some(pokestopMarkers, function (pokestopMarker) {
-            return pokestopMarker.pokestop.id === marker.id;
+    resetPokestopIconIn(marker, remainingTime);
+
+};
+
+var createPokestopMarkers = function (map, pokestops) {
+
+    _.each(pokestops, function (pokestop) {
+
+        var foundMarker = _.find(pokestopMarkers, function (pokestopMarker) {
+            return pokestopMarker.pokestop.id === pokestop.id;
         });
 
-        if (noMarkerFound) {
-            createPokestopMarker(map, marker);
+        if (!foundMarker) {
+            createPokestopMarker(map, pokestop);
+        } else if (pokestop.cooldown) {
+            updateCooldown(foundMarker, pokestop);
         }
+
     });
 };
 
@@ -360,7 +439,6 @@ var populateMap = function (objects) {
 
     if (objects.showAll) {
         updateNearbyRadar(objects.nearby);
-
         createSpawnMarkers(map, objects.spawn);
     }
 
@@ -376,23 +454,25 @@ socket.on('connect', function () {
 
         drawCoordinates(response);
         playerMarker.setPosition(response);
-        moveMarkers(response);
+        moveCircles(response);
 
     });
 
     socket.on('populateMap', function (objects) {
 
-        console.log(objects);
         populateMap(objects);
 
     });
 
 });
 
-function afterLogin(coords) {
+function afterLogin(result) {
+
+    var coords = result.location;
 
     loginMenuListener.remove();
     $('.right-click-menu').hide();
+    updatePlayerStatus(result);
     playerMarker.setPosition(coords);
     playerMarker.setMap(map);
 
@@ -425,19 +505,14 @@ function afterLogin(coords) {
     });
 }
 
-$(document).ready(function () {
-
-    var loginCoords;
-
+var initMap = function () {
     map = new google.maps.Map($('.map-placeholder')[0], {
         center: latLng,
         zoom: 14
     });
+};
 
-    marker = new google.maps.Marker({
-        map: map
-    });
-
+var initCircles = function () {
     radarCircle = new google.maps.Circle({
         strokeWeight: 0,
         fillColor: '#FF0000',
@@ -464,7 +539,9 @@ $(document).ready(function () {
         radius: 40,
         clickable: false
     });
+};
 
+var botLogin = function () {
     $.ajax({
         method: 'GET',
         url: '/amilogged/pokemonGo',
@@ -472,12 +549,15 @@ $(document).ready(function () {
         dataType: 'json'
     }).success(function (result) {
 
-        var latLng = {lat: result.location.latitude, lng: result.location.longitude};
+        var latLng = {lat: result.location.lat, lng: result.location.lng};
 
         marker.setPosition(latLng);
-        moveMarkers(latLng);
+        moveCircles(latLng);
 
     });
+};
+
+var initPlayerMarker = function () {
 
     var playerMarkerImage = {
         url: '/assets/images/pokemarker.png',
@@ -487,21 +567,20 @@ $(document).ready(function () {
         scaledSize: new google.maps.Size(29, 40)
     };
 
-    var scanMapLatLngListener = map.addListener('click', function (e) {
-
-        var latLng = e.latLng;
-
-        socket.emit('moveTo', latLng.toJSON());
-        marker.setPosition(latLng);
-        moveMarkers(latLng);
-
-    });
-
     playerMarker = new google.maps.Marker({
         icon: playerMarkerImage,
         zIndex: 2
     });
 
+};
+
+var initBotMarker = function () {
+    marker = new google.maps.Marker({
+        map: map
+    });
+};
+
+var initdestinationPointMarker = function () {
     destinationPoint = new google.maps.Marker({
         position: latLng,
         icon: {
@@ -509,6 +588,19 @@ $(document).ready(function () {
             scale: 2
         },
         zIndex: 1
+    });
+};
+
+var initPlayerLoginForm = function (loginCoords) {
+
+    var scanMapLatLngListener = map.addListener('click', function (e) {
+
+        var latLng = e.latLng;
+
+        socket.emit('moveTo', latLng.toJSON());
+        marker.setPosition(latLng);
+        moveCircles(latLng);
+
     });
 
     loginMenuListener = map.addListener('rightclick', function (e) {
@@ -535,27 +627,11 @@ $(document).ready(function () {
                 var latLng = e.latLng;
 
                 marker.setPosition(latLng);
-                moveMarkers(latLng);
+                moveCircles(latLng);
 
             });
 
         });
-
-    });
-
-    $.ajax({
-        method: 'GET',
-        url: '/amilogged/externalPlayer',
-        contentType: 'application/json',
-        dataType: 'json'
-    }).success(function (result) {
-
-        var coordinates = {lat: result.location.latitude, lng: result.location.longitude};
-
-        afterLogin(coordinates);
-
-    }).fail(function () {
-
 
     });
 
@@ -583,14 +659,55 @@ $(document).ready(function () {
             dataType: 'json'
         }).success(function (result) {
 
-            var coordinates = {lat: result.lat, lng: result.lng};
-
-            afterLogin(coordinates);
+            afterLogin(result);
 
         }).fail(function () {
             alert('no data');
         });
 
     });
+};
+
+var initBackpack = function () {
+    var $backpackButton = $('.backpack-button');
+    var $backpack = $('.backpack-wrapper');
+
+    $backpackButton.on('click', function () {
+        $backpack.addClass('open');
+    });
+
+    $backpack.find('.close').on('click', function () {
+        $backpack.removeClass('open');
+    });
+};
+
+$(document).ready(function () {
+
+    var loginCoords;
+
+    initMap();
+    initBotMarker();
+    initCircles();
+    botLogin();
+
+    initPlayerMarker();
+    initdestinationPointMarker();
+
+    $.ajax({
+        method: 'GET',
+        url: '/amilogged/externalPlayer',
+        contentType: 'application/json',
+        dataType: 'json'
+    }).success(function (result) {
+
+        afterLogin(result);
+
+    }).fail(function () {
+
+
+    });
+
+    initPlayerLoginForm(loginCoords);
+    initBackpack();
 
 });

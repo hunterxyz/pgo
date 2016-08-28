@@ -84,7 +84,7 @@ var serialize = function (toSerialize) {
 
             if (typeof value === 'object') {
 
-                if (value.high !== undefined && value.low !== undefined && value.toNumber) {
+                if (value && value.high !== undefined && value.low !== undefined && value.toNumber) {
                     value = value.toNumber();
                 } else if (!Array.isArray(value)) {
                     value = serialize(value);
@@ -102,8 +102,6 @@ var serialize = function (toSerialize) {
 
 var Controller = function () {
 
-    var self = this;
-
     this.walkingInterval = null;
 
     this.pokemonGoMapObjects = {};
@@ -114,11 +112,7 @@ var Controller = function () {
     this.externalPlayer = null;
     this.externalPlayerInfo = {};
 
-    this.login(lat, lng).then(function (result) {
-
-        self.pokemonGoInfo = result;
-
-    });
+    this.login(lat, lng);
 
     this.playerUsername = 'user';
     this.playerPassword = 'password';
@@ -131,7 +125,13 @@ Controller.prototype.amILoggedRoute = function (req, res) {
     var user = this[req.params.user];
 
     if (user && user.player && user.player.location) {
-        res.send({location: user.player.location, info: this[req.params.user + 'info']});
+
+        var response = this[req.params.user + 'Info'];
+
+        response.location = {lat: user.player.location.latitude, lng: user.player.location.longitude};
+
+        res.send(response);
+
     } else {
         res.status(500).send({});
     }
@@ -165,11 +165,7 @@ Controller.prototype.startMapScanner = function (user) {
 
             if (result.message === 'Illegal buffer') {
 
-                self.login(currentUser.player.location.latitude, currentUser.player.location.longitude, user || 'pokemonGo', true).then(function (loginResult) {
-
-                    self[currentUserString + 'Info'] = loginResult;
-
-                });
+                self.login(currentUser.player.location.latitude, currentUser.player.location.longitude, user || 'pokemonGo', true);
 
             }
 
@@ -206,6 +202,8 @@ Controller.prototype.login = Q.async(function* (lat, lng, user, doNotScan) {
 
     var serializedPlayer = serialize(playerInfo);
 
+    this[currentUserString + 'Info'] = serializedPlayer;
+
     return serializedPlayer;
 
 });
@@ -219,9 +217,11 @@ Controller.prototype.playerLogin = Q.async(function* (req, res) {
     this.playerPassword = req.body.password;
     this.playerProvider = req.body.provider || 'ptc';
 
-    var playerInventory = yield this.login(lat, lng, 'externalPlayer');
+    var playerInfo = yield this.login(lat, lng, 'externalPlayer');
 
-    res.send({inventory: playerInventory, lat, lng});
+    playerInfo.location = {lat, lng};
+
+    res.send(playerInfo);
 
 });
 
@@ -241,8 +241,10 @@ Controller.prototype.lootPokestop = Q.async(function* (req, res) {
 
         if (pokeStop) {
             let loot = yield pokeStop.search();
+            yield this.externalPlayer.inventory.update();
+            var response = {loot, playerInfo: serialize(this.externalPlayer)};
 
-            res.send(loot);
+            res.send(response);
 
         } else {
             res.send({error: 'Too far away'});
