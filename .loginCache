@@ -1,1 +1,14 @@
-{}
+{
+  "PokemonHunterxyz": {
+    "accessToken": "TGT-6197444-bRcj1gKMc6BCxbA3dEhmqP2659iPN9YRYdsLc3dbsWqnVc4x7H-sso.pokemon.com",
+    "timestamp": 1472338255937
+  },
+  "PkHunterxyz2": {
+    "accessToken": "TGT-6198470-eJ62mo543B2JSqpK7XjyvaO3bpffrT65cFPiiFIWK6uZIKDWta-sso.pokemon.com",
+    "timestamp": 1472338322564
+  },
+  "hunterxyz@gmail.com": {
+    "accessToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjBlNDVjNTZmNDFkODljNDkyYzA4NTljYmUwMTg0YTg2MDc1NTA5MTEifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXVkIjoiODQ4MjMyNTExMjQwLTdzbzQyMWpvdHIyNjA5cm1xYWtjZXV1MWx1dXEwcHRiLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTAyNTU2MTkxNjcxODI3ODQ2NjU2IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF6cCI6Ijg0ODIzMjUxMTI0MC0zdmRydHJmZG50bGpmMnU0bWxndG5ubGhuaWduMzVkNS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImVtYWlsIjoiaHVudGVyeHl6QGdtYWlsLmNvbSIsImlhdCI6MTQ3MjMzNjM1MSwiZXhwIjoxNDcyMzM5OTUxLCJuYW1lIjoiQWxiZXJ0byBVcmJhbm8iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDQuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1DYWdJSVktSmJEVS9BQUFBQUFBQUFBSS9BQUFBQUFBQUFIdy9lSk9VYXhrV2hPZy9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiQWxiZXJ0byIsImZhbWlseV9uYW1lIjoiVXJiYW5vIn0.OWjaTrJB9WI-eDoMGonuzpGpi5F7UiIp6AX1wOrtzHE6mN2DnCwUeHnpHIYWjQQH1hDF1ogOCCpCEZJidc9EVNTt-myc_P0iR3FSozUv5ZPZMtiev0vJA0unfND1WftAi1Lccjgl55MhCCvuRX_KelbHqP8ljAndEqvjRUmxuZiFb3zvCr3pd5R0cXBGbrm-0BTcBuyRmP82mgaX8kxhaUK7AFnnyEpSNkAL09FBIFrhe_dxl9qWo_tp0mSkueyrJeIJVF1fEzP0mRQhm45UMNkbNxMJX-VghkoPXlBK-gHmX9d_d6DuAW3FV50BcDlotGF3dE72G4IFjZWOR8JNNA",
+    "timestamp": 1472336909351
+  }
+}
