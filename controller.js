@@ -249,9 +249,10 @@ Controller.prototype.lootPokestop = Q.async(function*(req, res) {
 
         var pokeStop = _.find(this.externalPlayerMapObjects.forts.checkpoints, function (checkpoint) {
             var isNotCoolDown = !checkpoint.cooldown;
+            var inRange = checkpoint.withinRange;
             var matchedId = checkpoint.id === id;
 
-            return isNotCoolDown && matchedId;
+            return isNotCoolDown && matchedId && inRange;
 
         });
 
