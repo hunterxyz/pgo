@@ -27,7 +27,7 @@ var _ = require('lodash');
 //var XDate = require('xdate');
 var PokemonGo = require('pokemongo-api').default;
 
-PokemonGo.prototype.recycle = Q.async(function* (item_id, count) {
+PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
 
     return yield this.Call([{request: 'RECYCLE_INVENTORY_ITEM', message: {item_id, count}}]);
 
@@ -45,11 +45,11 @@ var parseMapResponse = function (objects, user, coordinates) {
 
     return {
         coordinates: coordinates,
-        catchable: objects.wild_pokemons,
-        forts: objects.forts,
-        nearby: objects.nearby_pokemons,
-        spawn: objects.spawn_points,
-        showAll: user === 'pokemonGo'
+        catchable:   objects.wild_pokemons,
+        forts:       objects.forts,
+        nearby:      objects.nearby_pokemons,
+        spawn:       objects.spawn_points,
+        showAll:     user === 'pokemonGo'
     };
 };
 
@@ -180,7 +180,7 @@ Controller.prototype.startMapScanner = function (user) {
 
 };
 
-Controller.prototype.login = Q.async(function* (lat, lng, user, doNotScan) {
+Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
 
     var currentUserString = user || 'pokemonGo';
 
@@ -189,7 +189,7 @@ Controller.prototype.login = Q.async(function* (lat, lng, user, doNotScan) {
     var currentUser = this[currentUserString];
 
     currentUser.player.location = {
-        latitude: parseFloat(lat),
+        latitude:  parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -211,12 +211,12 @@ Controller.prototype.login = Q.async(function* (lat, lng, user, doNotScan) {
 
 });
 
-Controller.prototype.recycleRoute = Q.async(function* (req, res) {
+Controller.prototype.recycleRoute = Q.async(function*(req, res) {
 
     var item_id = req.body.item_id;
     var count = Number(req.body.count);
 
-    yield this.externalPlayer.recycle(item_id,count);
+    yield this.externalPlayer.recycle(item_id, count);
 
     yield this.externalPlayer.inventory.update();
 
@@ -224,8 +224,7 @@ Controller.prototype.recycleRoute = Q.async(function* (req, res) {
 
 });
 
-
-Controller.prototype.playerLogin = Q.async(function* (req, res) {
+Controller.prototype.playerLogin = Q.async(function*(req, res) {
 
     var lat = req.body.lat;
     var lng = req.body.lng;
@@ -242,7 +241,7 @@ Controller.prototype.playerLogin = Q.async(function* (req, res) {
 
 });
 
-Controller.prototype.lootPokestop = Q.async(function* (req, res) {
+Controller.prototype.lootPokestop = Q.async(function*(req, res) {
 
     var id = req.body.id;
 
@@ -316,7 +315,7 @@ Controller.prototype.walkToPoint = function (req, res) {
         lngStart = newCoordinates.lng;
 
         self.externalPlayer.player.location = {
-            latitude: newCoordinates.lat,
+            latitude:  newCoordinates.lat,
             longitude: newCoordinates.lng
         };
 
@@ -330,7 +329,6 @@ Controller.prototype.walkToPoint = function (req, res) {
     res.send({distance: distance});
 
 };
-
 
 Controller.prototype.setSocket = function (socket) {
 
@@ -350,7 +348,7 @@ Controller.prototype.initSocketIOListeners = function () {
 
     self.socket.on('moveTo', function (latLng) {
         self.pokemonGo.player.location = {
-            latitude: latLng.lat,
+            latitude:  latLng.lat,
             longitude: latLng.lng
         };
     });
