@@ -194,7 +194,7 @@ var createPokeMarkers = function (map, markers) {
         }
 
         var image = {
-            url:        '/assets/images/' + pokemon.num + '.png',
+            url:        '/assets/images/pokemons/' + pokemon.num + '.png',
             size:       new google.maps.Size(120, 120),
             origin:     new google.maps.Point(0, 0),
             anchor:     new google.maps.Point(20, 20),
@@ -502,7 +502,7 @@ var updateNearbyRadar = function (nearbyPokemons) {
 
         var pokemon = nearbyPokemons[i];
         var img = $('<img/>')
-            .attr('src', '/assets/images/' + pokemon.num + '.png')
+            .attr('src', '/assets/images/pokemons/' + pokemon.num + '.png')
             .attr('title', pokemon.name);
 
         nearbyPlaceholder.append(img);
