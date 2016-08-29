@@ -30,11 +30,11 @@ router.init = function (app) {
 
         controller.setSocket(socket);
 
-       // app.get('/getMapObjects', wrapController(controller.getMapObjectsRoute));
         app.post('/walkToPoint', wrapController(controller.walkToPoint));
         app.post('/moveto', wrapController(controller.moveTo));
         app.post('/player/login', wrapController(controller.playerLogin));
         app.post('/player/lootpokestop', wrapController(controller.lootPokestop));
+        app.post('/player/catchpokemon', wrapController(controller.catchPokemon));
         app.post('/player/recycle', wrapController(controller.recycleRoute));
 
         app.get('/amilogged/:user',wrapController(controller.amILoggedRoute));

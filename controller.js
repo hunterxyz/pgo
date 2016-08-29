@@ -45,11 +45,11 @@ var parseMapResponse = function (objects, user, coordinates) {
 
     return {
         coordinates: coordinates,
-        catchable:   objects.wild_pokemons,
-        forts:       objects.forts,
-        nearby:      objects.nearby_pokemons,
-        spawn:       objects.spawn_points,
-        showAll:     user === 'pokemonGo'
+        catchable: objects.wild_pokemons,
+        forts: objects.forts,
+        nearby: objects.nearby_pokemons,
+        spawn: objects.spawn_points,
+        showAll: user === 'pokemonGo'
     };
 };
 
@@ -189,7 +189,7 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
     var currentUser = this[currentUserString];
 
     currentUser.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -274,6 +274,47 @@ Controller.prototype.lootPokestop = Q.async(function*(req, res) {
 
 });
 
+Controller.prototype.catchPokemon = Q.async(function*(req, res) {
+
+    var ball = req.body.ball;
+    var useRazzBerry = !!req.body.useRazzBerry;
+    var pokemonLocation = req.body.location;
+
+    if (this.externalPlayerMapObjects) {
+
+        var pokemon = _.find(this.externalPlayerMapObjects.catchable_pokemons, {
+            latitude: pokemonLocation.lat,
+            longitude: pokemonLocation.lng
+        });
+
+        if (pokemon) {
+
+            yield pokemon.encounter();
+
+            if (useRazzBerry && this.externalPlayer.inventory.items.razzBerry.count) {
+                yield this.externalPlayer.inventory.items.razzBerry.useCapture(pokemon);
+            }
+
+            var catchResult = yield pokemon.catch(ball);
+
+            yield this.externalPlayer.inventory.update();
+
+            var response = serialize(this.externalPlayer);
+
+            response.catchResult = catchResult;
+
+            res.send(response);
+
+        } else {
+            res.send({error: 'Too far away'});
+        }
+
+    } else {
+        res.send({error: 'No Data'});
+    }
+
+});
+
 Controller.prototype.walkToPoint = function (req, res) {
 
     var self = this;
@@ -316,7 +357,7 @@ Controller.prototype.walkToPoint = function (req, res) {
         lngStart = newCoordinates.lng;
 
         self.externalPlayer.player.location = {
-            latitude:  newCoordinates.lat,
+            latitude: newCoordinates.lat,
             longitude: newCoordinates.lng
         };
 
@@ -326,7 +367,7 @@ Controller.prototype.walkToPoint = function (req, res) {
 
     };
 
-    if (!walkToNextpoint()){
+    if (!walkToNextpoint()) {
         this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
     }
 
@@ -352,7 +393,7 @@ Controller.prototype.initSocketIOListeners = function () {
 
     self.socket.on('moveTo', function (latLng) {
         self.pokemonGo.player.location = {
-            latitude:  latLng.lat,
+            latitude: latLng.lat,
             longitude: latLng.lng
         };
     });
