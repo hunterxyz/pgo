@@ -199,11 +199,11 @@ var clickOnPokemon = function () {
                     marker.setMap(null);
                     break;
                 case 2:
-                    alert('The Pokemon ran away! :,(');
-                    marker.setMap(null);
+                    alert('The Pokemon broke out from the ball. :|');
                     break;
                 case 3:
-                    alert('The Pokemon broke out from the ball. :|');
+                    alert('The Pokemon ran away! :,(');
+                    marker.setMap(null);
                     break;
                 case 4:
                     alert('You missed the pokemon. O_O');
