@@ -300,9 +300,9 @@ Controller.prototype.walkToPoint = function (req, res) {
 
         var isLastStep = false;
         var stepDistance = metersPerSecond * stepFrequency;
-        var distanceReachedSoFar = ((timer / stepFrequency) - 1) * stepDistance;
+        var nexStepDistance = ((timer / stepFrequency)) * stepDistance;
 
-        if (timer > seconds || distanceReachedSoFar > distance) {
+        if (timer > seconds || nexStepDistance > distance) {
             stepDistance = distance % (metersPerSecond * stepFrequency);
             clearInterval(self.walkingInterval);
             isLastStep = true;
@@ -322,10 +322,13 @@ Controller.prototype.walkToPoint = function (req, res) {
 
         self.socket.emit('walkedTo', newCoordinates);
 
+        return isLastStep;
+
     };
 
-    walkToNextpoint();
-    this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
+    if (!walkToNextpoint()){
+        this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
+    }
 
     res.send({distance: distance});
 
