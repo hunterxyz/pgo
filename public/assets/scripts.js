@@ -423,7 +423,7 @@ var clickOnPokeStop = function () {
             return;
         }
 
-        if (result.loot.result === 4) {
+        if (result.loot.FortSearchResponse.result === 4) {
             alert('Your backpack is full');
         }
 
