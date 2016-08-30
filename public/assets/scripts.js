@@ -5,9 +5,7 @@ var latLng = {lat: 48.0835518, lng: 11.4732557}; //FL-I-2
 var pokeMarkers = [];
 var spawnMarkers = [];
 var pokestopMarkers = [];
-//var gymMarkers = [];
 var coordinateMarkers = [];
-var mapHistory = [];
 
 var marker;
 var playerMarker;
@@ -130,7 +128,7 @@ var clearCoordinates = function () {
 
 };
 
-function isPokemonOnMap(pokemon) {
+var isPokemonOnMap = function(pokemon) {
 
     return _.find(pokeMarkers, function (pokeMarker) {
 
@@ -138,7 +136,7 @@ function isPokemonOnMap(pokemon) {
 
     });
 
-}
+};
 
 var handleMarkerTimer = function (marker, pokeMarkers) {
 
@@ -168,6 +166,109 @@ var handleMarkerTimer = function (marker, pokeMarkers) {
 
 };
 
+var updatePlayerStatus = function (result) {
+
+    $('.player-status .level').text(result.player.level);
+    $('.player-status').show();
+
+    var nextLevel = result.player.next_level_xp;
+    var prevLevel = 0;
+    var exp = result.player.experience;
+
+    for (var i = 0; i < result.player.level - 1; i++) {
+
+        var level = levels[i];
+
+        prevLevel += level;
+
+    }
+
+    var percentage = (exp - prevLevel) * 100 / (nextLevel - prevLevel);
+
+    $('.player-status .exp-level').css({
+        width: percentage + '%'
+    });
+
+    var $item;
+    var razzBerryWasSelected = $('.backpack .item.ball input[type=radio]:checked');
+    var $backpack = $('.backpack tbody').html('');
+    var $itemrow = $('<tr/>').addClass('item');
+    var $itemImage = $('<td><img/></td>').addClass('item-image');
+    var $itemCount = $('<td><div class="item-count"></td>');
+    var $itemSelection = $('<td/>').addClass('item-selection');
+    var $itemRecycle = $('<td><input value="0"/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
+
+    $itemrow.append($itemImage);
+    $itemrow.append($itemCount);
+    $itemrow.append($itemSelection);
+    $itemrow.append($itemRecycle);
+
+    _.each(result.inventory.items, function (item, k) {
+        if (item.count) {
+
+            $item = $itemrow.clone();
+
+            $item.find('img').attr('src', '/assets/images/items/' + k + '.png');
+            $item.find('.item-count').text(item.count);
+
+            var itemSelection = $item.find('.item-selection');
+            var input = $('<input type="checkbox" class="item-selection"/>');
+            var $itemRecycleButton = $item.find('.item-recycle button');
+
+            if (k.match(/ball/i)) {
+                $item.addClass('ball');
+                input.attr('type', 'radio').attr('name', 'ball');
+
+                if (k.match(/poke/i)) {
+                    input.attr('checked', true);
+                }
+
+                itemSelection.append(input);
+
+            } else if (k.match(/berry/i)) {
+
+                $item.addClass('berry');
+                input.attr('type', 'checkbox').attr('name', 'berry');
+
+                if(razzBerryWasSelected){
+                    input.prop('checked', true);
+                }
+
+                itemSelection.append(input);
+
+            } else if (k.match(/unlimited/i)) {
+
+                $item.find('.item-recycle input').remove();
+                $itemRecycleButton.remove();
+                $item.find('.item-count').text('∞');
+
+            }
+
+            $itemRecycleButton.data('item-id', item.item_id).on('click', function () {
+
+                var $input = $itemRecycleButton.parent().find('input');
+                var data = {item_id: $itemRecycleButton.data('itemId'), count: $input.val()};
+
+                if (data.count > 0) {
+                    $.ajax({
+                        method: 'POST',
+                        url: '/player/recycle',
+                        data: JSON.stringify(data),
+                        contentType: 'application/json',
+                        dataType: 'json'
+                    }).success(function (result) {
+                        updatePlayerStatus(result);
+                    });
+                }
+
+            });
+
+            $backpack.append($item);
+        }
+    });
+
+};
+
 var clickOnPokemon = function () {
 
     var marker = this;
@@ -194,6 +295,10 @@ var clickOnPokemon = function () {
             updatePlayerStatus(result);
 
             switch (result.catchResult.CatchPokemonResponse.status){
+
+                case 0:
+                    alert('You reached your pokemon limit.');
+                    break;
                 case 1:
                     alert('POKEMON CAUGHT!!! :D');
                     marker.setMap(null);
@@ -359,103 +464,6 @@ var resetPokestopIconIn = function (marker, timeout) {
         marker.setIcon(image);
 
     }, timeout);
-
-};
-
-var updatePlayerStatus = function (result) {
-
-    $('.player-status .level').text(result.player.level);
-    $('.player-status').show();
-
-    var nextLevel = result.player.next_level_xp;
-    var prevLevel = 0;
-    var exp = result.player.experience;
-
-    for (var i = 0; i < result.player.level - 1; i++) {
-
-        var level = levels[i];
-
-        prevLevel += level;
-
-    }
-
-    var percentage = (exp - prevLevel) * 100 / (nextLevel - prevLevel);
-
-    $('.player-status .exp-level').css({
-        width: percentage + '%'
-    });
-
-    var $item;
-    var $backpack = $('.backpack tbody').html('');
-    var $itemrow = $('<tr/>').addClass('item');
-    var $itemImage = $('<td><img/></td>').addClass('item-image');
-    var $itemCount = $('<td><div class="item-count"></td>');
-    var $itemSelection = $('<td/>').addClass('item-selection');
-    var $itemRecycle = $('<td><input value="0"/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
-
-    $itemrow.append($itemImage);
-    $itemrow.append($itemCount);
-    $itemrow.append($itemSelection);
-    $itemrow.append($itemRecycle);
-
-    _.each(result.inventory.items, function (item, k) {
-        if (item.count) {
-
-            $item = $itemrow.clone();
-
-            $item.find('img').attr('src', '/assets/images/items/' + k + '.png');
-            $item.find('.item-count').text(item.count);
-
-            var itemSelection = $item.find('.item-selection');
-            var input = $('<input type="checkbox" class="item-selection"/>');
-            var $itemRecycleButton = $item.find('.item-recycle button');
-
-            if (k.match(/ball/i)) {
-                $item.addClass('ball');
-                input.attr('type', 'radio').attr('name', 'ball');
-
-                if (k.match(/poke/i)) {
-                    input.attr('checked', true);
-                }
-
-                itemSelection.append(input);
-
-            } else if (k.match(/berry/i)) {
-
-                $item.addClass('berry');
-                input.attr('type', 'checkbox').attr('name', 'berry');
-                itemSelection.append(input);
-
-            } else if (k.match(/unlimited/i)) {
-
-                $item.find('.item-recycle input').remove();
-                $itemRecycleButton.remove();
-                $item.find('.item-count').text('∞');
-
-            }
-
-            $itemRecycleButton.data('item-id', item.item_id).on('click', function () {
-
-                var $input = $itemRecycleButton.parent().find('input');
-                var data = {item_id: $itemRecycleButton.data('itemId'), count: $input.val()};
-
-                if (data.count > 0) {
-                    $.ajax({
-                        method: 'POST',
-                        url: '/player/recycle',
-                        data: JSON.stringify(data),
-                        contentType: 'application/json',
-                        dataType: 'json'
-                    }).success(function (result) {
-                        updatePlayerStatus(result);
-                    });
-                }
-
-            });
-
-            $backpack.append($item);
-        }
-    });
 
 };
 

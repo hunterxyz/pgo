@@ -33,6 +33,21 @@ PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
 
 });
 
+PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
+
+    return yield this.Call([
+        {
+            request: 'USE_ITEM_CAPTURE',
+            message: {
+                item_id:        itemId,
+                encounter_id:   pokemon.encounter_id,
+                spawn_point_id: pokemon.spawn_point_id,
+            }
+        }
+    ]);
+
+});
+
 var geoHelper = require('./utils/GeoHelper');
 
 var botUsername = process.env.PGO_USERNAME || 'user';
@@ -45,11 +60,11 @@ var parseMapResponse = function (objects, user, coordinates) {
 
     return {
         coordinates: coordinates,
-        catchable: objects.wild_pokemons,
-        forts: objects.forts,
-        nearby: objects.nearby_pokemons,
-        spawn: objects.spawn_points,
-        showAll: user === 'pokemonGo'
+        catchable:   objects.wild_pokemons,
+        forts:       objects.forts,
+        nearby:      objects.nearby_pokemons,
+        spawn:       objects.spawn_points,
+        showAll:     user === 'pokemonGo'
     };
 };
 
@@ -189,7 +204,7 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
     var currentUser = this[currentUserString];
 
     currentUser.player.location = {
-        latitude: parseFloat(lat),
+        latitude:  parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -283,7 +298,7 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
     if (this.externalPlayerMapObjects) {
 
         var pokemon = _.find(this.externalPlayerMapObjects.catchable_pokemons, {
-            latitude: pokemonLocation.lat,
+            latitude:  pokemonLocation.lat,
             longitude: pokemonLocation.lng
         });
 
@@ -292,7 +307,7 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
             yield pokemon.encounter();
 
             if (useRazzBerry && this.externalPlayer.inventory.items.razzBerry.count) {
-                yield this.externalPlayer.inventory.items.razzBerry.useCapture(pokemon);
+                yield this.externalPlayer.useCapture(this.externalPlayer.inventory.items.razzBerry.item_id, pokemon);
             }
 
             var catchResult = yield pokemon.catch(ball);
@@ -357,7 +372,7 @@ Controller.prototype.walkToPoint = function (req, res) {
         lngStart = newCoordinates.lng;
 
         self.externalPlayer.player.location = {
-            latitude: newCoordinates.lat,
+            latitude:  newCoordinates.lat,
             longitude: newCoordinates.lng
         };
 
@@ -393,7 +408,7 @@ Controller.prototype.initSocketIOListeners = function () {
 
     self.socket.on('moveTo', function (latLng) {
         self.pokemonGo.player.location = {
-            latitude: latLng.lat,
+            latitude:  latLng.lat,
             longitude: latLng.lng
         };
     });
