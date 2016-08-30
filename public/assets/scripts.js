@@ -190,7 +190,7 @@ var updatePlayerStatus = function (result) {
     });
 
     var $item;
-    var razzBerryWasSelected = $('.backpack .item.ball input[type=radio]:checked');
+    var razzBerryWasSelected = $('.backpack .item.berry input[type=checkbox]:checked').length;
     var $backpack = $('.backpack tbody').html('');
     var $itemrow = $('<tr/>').addClass('item');
     var $itemImage = $('<td><img/></td>').addClass('item-image');
