@@ -6,14 +6,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
         <script src="https://cdn.jsdelivr.net/xdate/0.8/xdate.min.js"></script>
         <script src="/assets/socket.io.js"></script>
+        <script src="/assets/TimeCircles.js"></script>
         <script src="/assets/scripts.js"></script>
-        <link rel="stylesheet" type="text/css" href="/assets/style.css">
+        <link rel="stylesheet" type="text/css" href="assets/style.css">
+        <link rel="stylesheet" type="text/css" href="assets/TimeCircles.css">
         <meta charset="UTF-8">
         <title>Poke Map</title>
     </head>
     <body>
         <div class="map-placeholder"></div>
-        <div class="nearby"></div>
+        <div class="nearby-wrapper">
+            <div class="nearby"></div>
+            <div class="bot-timer" data-timer="10"></div>
+        </div>
         <div class="speed">
             <select name="speed">
                 <option selected value="5">5 km/h (walk)</option>
@@ -53,7 +58,13 @@
 
         <div class="player-status">
 
-            <img class="backpack-button" src="/assets/images/backpack.png">
+            <div>
+                <img class="backpack-button" src="/assets/images/backpack.png">
+            </div>
+
+            <div>
+                <img class="pokemon-button" src="/assets/images/pokemonButton.png">
+            </div>
 
             <div class="level"></div>
 
@@ -70,8 +81,24 @@
 
                 </tbody>
             </table>
+        </div>
 
+        <div class="pokemons-wrapper">
+            <div class="close">X</div>
+            <div class="pokemons"></div>
+        </div>
 
+        <div class="templates">
+            <div class="pokemon">
+                <div class="cp">CP <span class="points"></span></div>
+                <div class="image-wrapper">
+                    <img src="" alt="">
+                </div>
+                <div class="hp">
+                    <div class="hp-level"></div>
+                </div>
+                <div class="name"></div>
+            </div>
         </div>
 
     </body>

@@ -39,8 +39,8 @@ PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
         {
             request: 'USE_ITEM_CAPTURE',
             message: {
-                item_id:        itemId,
-                encounter_id:   pokemon.encounter_id,
+                item_id: itemId,
+                encounter_id: pokemon.encounter_id,
                 spawn_point_id: pokemon.spawn_point_id,
             }
         }
@@ -60,11 +60,11 @@ var parseMapResponse = function (objects, user, coordinates) {
 
     return {
         coordinates: coordinates,
-        catchable:   objects.wild_pokemons,
-        forts:       objects.forts,
-        nearby:      objects.nearby_pokemons,
-        spawn:       objects.spawn_points,
-        showAll:     user === 'pokemonGo'
+        catchable: objects.wild_pokemons,
+        forts: objects.forts,
+        nearby: objects.nearby_pokemons,
+        spawn: objects.spawn_points,
+        showAll: user === 'pokemonGo'
     };
 };
 
@@ -104,12 +104,18 @@ var serialize = function (toSerialize) {
                 continue;
             }
 
+            if (typeof value === 'string') {
+                continue;
+            }
+
             if (typeof value === 'object') {
 
                 if (value && value.high !== undefined && value.low !== undefined && value.toNumber) {
                     value = value.toNumber();
                 } else if (!Array.isArray(value)) {
                     value = serialize(value);
+                } else if (Array.isArray(value)) {
+                    value = _.map(value, serialize);
                 }
 
             }
@@ -204,7 +210,7 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
     var currentUser = this[currentUserString];
 
     currentUser.player.location = {
-        latitude:  parseFloat(lat),
+        latitude: parseFloat(lat),
         longitude: parseFloat(lng)
     };
 
@@ -298,7 +304,7 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
     if (this.externalPlayerMapObjects) {
 
         var pokemon = _.find(this.externalPlayerMapObjects.catchable_pokemons, {
-            latitude:  pokemonLocation.lat,
+            latitude: pokemonLocation.lat,
             longitude: pokemonLocation.lng
         });
 
@@ -372,7 +378,7 @@ Controller.prototype.walkToPoint = function (req, res) {
         lngStart = newCoordinates.lng;
 
         self.externalPlayer.player.location = {
-            latitude:  newCoordinates.lat,
+            latitude: newCoordinates.lat,
             longitude: newCoordinates.lng
         };
 
@@ -408,7 +414,7 @@ Controller.prototype.initSocketIOListeners = function () {
 
     self.socket.on('moveTo', function (latLng) {
         self.pokemonGo.player.location = {
-            latitude:  latLng.lat,
+            latitude: latLng.lat,
             longitude: latLng.lng
         };
     });

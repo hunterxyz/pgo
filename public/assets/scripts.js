@@ -128,7 +128,7 @@ var clearCoordinates = function () {
 
 };
 
-var isPokemonOnMap = function(pokemon) {
+var isPokemonOnMap = function (pokemon) {
 
     return _.find(pokeMarkers, function (pokeMarker) {
 
@@ -166,29 +166,7 @@ var handleMarkerTimer = function (marker, pokeMarkers) {
 
 };
 
-var updatePlayerStatus = function (result) {
-
-    $('.player-status .level').text(result.player.level);
-    $('.player-status').show();
-
-    var nextLevel = result.player.next_level_xp;
-    var prevLevel = 0;
-    var exp = result.player.experience;
-
-    for (var i = 0; i < result.player.level - 1; i++) {
-
-        var level = levels[i];
-
-        prevLevel += level;
-
-    }
-
-    var percentage = (exp - prevLevel) * 100 / (nextLevel - prevLevel);
-
-    $('.player-status .exp-level').css({
-        width: percentage + '%'
-    });
-
+var updateItems = function (result) {
     var $item;
     var razzBerryWasSelected = $('.backpack .item.berry input[type=checkbox]:checked').length;
     var $backpack = $('.backpack tbody').html('');
@@ -204,6 +182,7 @@ var updatePlayerStatus = function (result) {
     $itemrow.append($itemRecycle);
 
     _.each(result.inventory.items, function (item, k) {
+
         if (item.count) {
 
             $item = $itemrow.clone();
@@ -230,7 +209,7 @@ var updatePlayerStatus = function (result) {
                 $item.addClass('berry');
                 input.attr('type', 'checkbox').attr('name', 'berry');
 
-                if(razzBerryWasSelected){
+                if (razzBerryWasSelected) {
                     input.prop('checked', true);
                 }
 
@@ -256,15 +235,59 @@ var updatePlayerStatus = function (result) {
                         data: JSON.stringify(data),
                         contentType: 'application/json',
                         dataType: 'json'
-                    }).success(function (result) {
-                        updatePlayerStatus(result);
-                    });
+                    }).success(updatePlayerStatus);
                 }
 
             });
 
             $backpack.append($item);
         }
+    });
+};
+
+var updatePlayerStatus = function (result) {
+
+    $('.player-status .level').text(result.player.level);
+    $('.player-status').show();
+
+    var nextLevel = result.player.next_level_xp;
+    var prevLevel = 0;
+    var exp = result.player.experience;
+
+    for (var i = 0; i < result.player.level - 1; i++) {
+
+        var level = levels[i];
+
+        prevLevel += level;
+
+    }
+
+    var percentage = (exp - prevLevel) * 100 / (nextLevel - prevLevel);
+
+    $('.player-status .exp-level').css({
+        width: percentage + '%'
+    });
+
+    updateItems(result);
+
+    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
+    $pokemonsContainer.html('');
+
+    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
+
+    _.each(pokemonsList, function (pokemon) {
+
+        var pokemonTemplate = $('.templates .pokemon').clone();
+
+        pokemonTemplate.find('.cp .points').text(pokemon.cp);
+        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+
+        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
+        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
+        pokemonTemplate.find('.name').text(pokemon.name);
+
+        $pokemonsContainer.append(pokemonTemplate);
+
     });
 
 };
@@ -294,7 +317,7 @@ var clickOnPokemon = function () {
             console.log(result.catchResult);
             updatePlayerStatus(result);
 
-            switch (result.catchResult.CatchPokemonResponse.status){
+            switch (result.catchResult.CatchPokemonResponse.status) {
 
                 case 0:
                     alert('You reached your pokemon limit.');
@@ -315,7 +338,7 @@ var clickOnPokemon = function () {
                     break;
             }
 
-        }else{
+        } else {
             alert('Too far away.');
         }
 
@@ -556,7 +579,7 @@ var createPokestopMarkers = function (map, pokestops) {
 var updateNearbyRadar = function (nearbyPokemons) {
 
     var nearbyPlaceholder = $('.nearby');
-
+    $('.nearby-wrapper .bot-timer').TimeCircles().restart();
     nearbyPlaceholder.html('');
 
     for (var i = 0; i < nearbyPokemons.length; i++) {
@@ -731,17 +754,45 @@ var initdestinationPointMarker = function () {
     });
 };
 
+var moveBotMarkerTo = function (e) {
+
+    var latLng = e.latLng;
+
+    socket.emit('moveTo', latLng.toJSON());
+    marker.setPosition(latLng);
+    moveCircles(latLng);
+
+};
+
+var login = function login(loginCoords) {
+
+    var data = loginCoords;
+
+    data.username = $('[name=username]').val();
+    data.password = $('[name=password]').val();
+    data.provider = $('[name=provider]').val();
+
+    $.ajax({
+        method: 'POST',
+        url: '/player/login',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json'
+    }).success(function (result) {
+
+        afterLogin(result);
+
+    }).fail(function () {
+        alert('no data');
+    });
+
+};
+
 var initPlayerLoginForm = function (loginCoords) {
 
-    var scanMapLatLngListener = map.addListener('click', function (e) {
+    var scanMapLatLngListener = map.addListener('click', $.proxy(moveBotMarkerTo, this));
 
-        var latLng = e.latLng;
-
-        socket.emit('moveTo', latLng.toJSON());
-        marker.setPosition(latLng);
-        moveCircles(latLng);
-
-    });
+    var $loginHere = $('.right-click-menu ul.login-here');
 
     loginMenuListener = map.addListener('rightclick', function (e) {
 
@@ -760,52 +811,24 @@ var initPlayerLoginForm = function (loginCoords) {
 
             $('.login-form').hide();
             rightClickMenu.hide();
+            $loginHere.show();
 
             closeMenuListener.remove();
-            scanMapLatLngListener = map.addListener('click', function (e) {
-
-                var latLng = e.latLng;
-
-                marker.setPosition(latLng);
-                moveCircles(latLng);
-
-            });
+            scanMapLatLngListener = map.addListener('click', $.proxy(moveBotMarkerTo, this));
 
         });
 
+        $('.go').on('click', $.proxy(login, this, loginCoords));
+
     });
 
-    var $loginHere = $('.right-click-menu ul.login-here li');
 
-    $loginHere.on('click', function () {
+    $loginHere.find('li').on('click', function () {
         $loginHere.hide();
         $('.login-form').show();
 
     });
 
-    $('.go').on('click', function () {
-
-        var data = loginCoords;
-
-        data.username = $('[name=username]').val();
-        data.password = $('[name=password]').val();
-        data.provider = $('[name=provider]').val();
-
-        $.ajax({
-            method: 'POST',
-            url: '/player/login',
-            data: JSON.stringify(data),
-            contentType: 'application/json',
-            dataType: 'json'
-        }).success(function (result) {
-
-            afterLogin(result);
-
-        }).fail(function () {
-            alert('no data');
-        });
-
-    });
 };
 
 var initBackpack = function () {
@@ -821,9 +844,44 @@ var initBackpack = function () {
     });
 };
 
+var initPokemonList = function () {
+    var $pokemonButton = $('.pokemon-button');
+    var $pokemonsWrapper = $('.pokemons-wrapper');
+
+    $pokemonButton.on('click', function () {
+        $pokemonsWrapper.addClass('open');
+    });
+
+    $pokemonsWrapper.find('.close').on('click', function () {
+        $pokemonsWrapper.removeClass('open');
+    });
+};
+
 $(document).ready(function () {
 
     var loginCoords;
+
+    $('.nearby-wrapper .bot-timer').TimeCircles({
+        start: false,
+        total_duration: 10,
+        count_past_zero: false,
+        'time': {
+            'Days': {
+                'show': false
+            },
+            'Hours': {
+                'show': false
+            },
+            'Minutes': {
+                'show': false
+            },
+            'Seconds': {
+                'text': 'Next scan in:',
+                'color': '#FF9999',
+                'show': true
+            }
+        }
+    });
 
     initMap();
     initBotMarker();
@@ -848,5 +906,6 @@ $(document).ready(function () {
 
     initPlayerLoginForm(loginCoords);
     initBackpack();
+    initPokemonList();
 
 });

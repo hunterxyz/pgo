@@ -1,177 +1,203 @@
-html, body {
-
-    height: 100%;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-    font-family: sans-serif;
-
+html,
+body {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
 }
-
 .map-placeholder {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
-
-.nearby {
-    position: absolute;
-    bottom: 0;
-    right: 50px;
-    background-color: white;
-    width: 300px;
-    height: 300px;
-    overflow: auto;
+.nearby-wrapper {
+  position: absolute;
+  bottom: 0;
+  right: 50px;
+  background-color: white;
+  width: 300px;
+  height: 300px;
+  overflow: auto;
 }
-
-.nearby img {
-    width: 25%;
+.nearby-wrapper .nearby {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
 }
-
+.nearby-wrapper .nearby img {
+  width: 25%;
+}
+.nearby-wrapper .bot-timer {
+  position: absolute;
+  z-index: 1;
+  top: 25px;
+  left: 25px;
+  width: 250px;
+  height: 250px;
+  opacity: 0.2;
+}
 .frequency {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: white;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: white;
 }
-
 .speed {
-    position: absolute;
-    top: 10px;
-    right: 200px;
-    background-color: white;
+  position: absolute;
+  top: 10px;
+  right: 200px;
+  background-color: white;
 }
-
 .right-click-menu {
-    position: absolute;
-    display: none;
-    background-color: white;
-    border: 1px solid black;
+  position: absolute;
+  display: none;
+  background-color: white;
+  border: 1px solid black;
 }
-
 .right-click-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
-
 .right-click-menu ul.login-here li {
-    padding: 3px 5px;
-    font-family: sans-serif;
-    font-size: 12px;
-    text-align: left;
+  padding: 3px 5px;
+  font-family: sans-serif;
+  font-size: 12px;
+  text-align: left;
 }
-
 .right-click-menu ul.login-here li:hover {
-    background-color: dodgerblue;
+  background-color: dodgerblue;
 }
-
 .right-click-menu ul.login-form {
-    display: none;
+  display: none;
 }
-
 .player-status {
-    display: none;
-    position: absolute;
-    bottom: 50px;
-    left: 50px;
-    font-family: sans-serif;
-    font-weight: bold;
-    font-size: 24px;
-    text-align: center;
-
+  display: none;
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 24px;
+  text-align: center;
 }
-
 .player-status .level {
-    width: 46px;
-    height: 46px;
-    box-sizing: border-box;
-    border: 3px solid dodgerblue;
-    line-height: 40px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
+  width: 46px;
+  height: 46px;
+  box-sizing: border-box;
+  border: 3px solid dodgerblue;
+  line-height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
 }
-
 .player-status .exp {
-    width: 100%;
-    border: 1px solid dodgerblue;
-    height: 5px;
-    margin-top: 2px;
-    box-sizing: border-box;
-    border-radius: 5px;
+  width: 100%;
+  border: 1px solid dodgerblue;
+  height: 5px;
+  margin-top: 2px;
+  box-sizing: border-box;
+  border-radius: 5px;
 }
-
 .player-status .exp .exp-level {
-    background-color: dodgerblue;
-    height: 100%;
-    width: 0%;
-    transition: width 400ms linear 0ms;
+  background-color: dodgerblue;
+  height: 100%;
+  width: 0%;
+  transition: width 400ms linear 0ms;
 }
-
-.player-status .backpack-button {
-    width: 46px;
-    cursor: pointer;
+.player-status .backpack-button,
+.player-status .pokemon-button {
+  width: 46px;
+  cursor: pointer;
 }
-
+.pokemons-wrapper {
+  position: absolute;
+  height: 600px;
+  width: 300px;
+  background-color: white;
+  bottom: 50px;
+  left: -300px;
+  transition: left 200ms ease-in 0ms;
+  overflow: auto;
+}
+.pokemons-wrapper.open {
+  left: 0;
+}
+.pokemons-wrapper .close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+.pokemons-wrapper .pokemons {
+  width: 100%;
+}
+.pokemons-wrapper .pokemons .pokemon {
+  width: 25%;
+  height: 100px;
+  float: left;
+  text-align: center;
+  font-size: 12px;
+}
+.pokemons-wrapper .pokemons .pokemon .image-wrapper {
+  text-align: center;
+}
+.pokemons-wrapper .pokemons .pokemon .image-wrapper img {
+  height: 50px;
+}
 .backpack-wrapper {
-
-    position: absolute;
-    width: 300px;
-    left: -300px;
-    bottom: 50px;
-    transition: left 200ms ease-in 0ms;
-    background-color: white;
-    max-height: 400px;
-    overflow: auto;
+  position: absolute;
+  width: 300px;
+  left: -300px;
+  bottom: 50px;
+  transition: left 200ms ease-in 0ms;
+  background-color: white;
+  max-height: 400px;
+  overflow: auto;
 }
-
-.backpack-wrapper table {
-    width: 100%;
-    border-spacing: 0;
-    border-collapse: collapse;
-    margin: 0;
-    padding: 0;
-}
-
-.backpack-wrapper table tr {
-    height: 100px;
-    padding: 0;
-    margin: 0;
-    line-height: 0;
-}
-
-.backpack-wrapper table tr td {
-    height: 100px;
-    padding: 0;
-    margin: 0;
-    text-align: center;
-}
-
-.backpack-wrapper table tr td.item-image {
-    width: 100px;
-    height: 100px;
-}
-
-.backpack-wrapper table tr td.item-recycle input {
-    width: 25px;
-    text-align: right;
-}
-
-.backpack-wrapper .backpack .item-image img {
-    width: 100px;
-    height: 100px;
-    line-height: 0;
-    vertical-align: middle;
-}
-
-.backpack-wrapper .close {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    cursor: pointer;
-}
-
 .backpack-wrapper.open {
-    left: 0;
+  left: 0;
 }
-
+.backpack-wrapper .close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+.backpack-wrapper table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+}
+.backpack-wrapper table tr {
+  height: 100px;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+}
+.backpack-wrapper table tr td {
+  height: 100px;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+.backpack-wrapper table tr td.item-image {
+  width: 100px;
+  height: 100px;
+}
+.backpack-wrapper table tr td.item-recycle input {
+  width: 25px;
+  text-align: right;
+}
+.backpack-wrapper .backpack .item-image img {
+  width: 100px;
+  height: 100px;
+  line-height: 0;
+  vertical-align: middle;
+}
+.templates {
+  display: none;
+}
