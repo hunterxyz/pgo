@@ -87,6 +87,10 @@ var serialize = function (toSerialize) {
         'lastObjectsCall'
     ];
 
+    if (typeof toSerialize === 'string') {
+        return toSerialize;
+    }
+
     for (var key in toSerialize) {
         if (toSerialize.hasOwnProperty(key)) {
 
@@ -101,10 +105,6 @@ var serialize = function (toSerialize) {
             }
 
             if (value instanceof Function) {
-                continue;
-            }
-
-            if (typeof value === 'string') {
                 continue;
             }
 

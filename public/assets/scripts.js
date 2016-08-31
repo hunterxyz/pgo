@@ -390,8 +390,6 @@ var createPokeMarkers = function (map, markers) {
 
         marker.addListener('click', $.proxy(clickOnPokemon, marker));
 
-        // marker.setMap(map);
-
         pokemon.interval = setInterval($.proxy(handleMarkerTimer, pokemon, marker, pokeMarkers), 1000);
 
         pokeMarkers.push(marker);
