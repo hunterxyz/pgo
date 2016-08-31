@@ -111,27 +111,60 @@ body {
   width: 46px;
   cursor: pointer;
 }
-.pokemons-wrapper {
+.pokemons-wrapper,
+.pokemon-details-wrapper {
   position: absolute;
-  height: 600px;
+  height: 640px;
   width: 300px;
   background-color: white;
   bottom: 50px;
   left: -300px;
   transition: left 200ms ease-in 0ms;
-  overflow: auto;
 }
-.pokemons-wrapper.open {
+.pokemons-wrapper.open,
+.pokemon-details-wrapper.open {
   left: 0;
 }
-.pokemons-wrapper .close {
+.pokemons-wrapper .close,
+.pokemon-details-wrapper .close {
   position: absolute;
   top: 5px;
   right: 5px;
   cursor: pointer;
 }
+.pokemon-details-wrapper .pokemon-details .cp {
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+.pokemon-details-wrapper .pokemon-details .cp .points {
+  font-size: 24px;
+}
+.pokemon-details-wrapper .pokemon-details .image-wrapper {
+  text-align: center;
+}
+.pokemon-details-wrapper .button {
+  width: 170px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: skyblue;
+  margin: 0 auto;
+  cursor: pointer;
+  color: white;
+  text-align: center;
+  line-height: 30px;
+}
+.pokemons-wrapper .count {
+  height: 30px;
+  text-align: center;
+  padding: 5px;
+  line-height: 30px;
+}
 .pokemons-wrapper .pokemons {
   width: 100%;
+  overflow: auto;
+  height: 600px;
 }
 .pokemons-wrapper .pokemons .pokemon {
   width: 25%;
@@ -139,6 +172,7 @@ body {
   float: left;
   text-align: center;
   font-size: 12px;
+  cursor: pointer;
 }
 .pokemons-wrapper .pokemons .pokemon .image-wrapper {
   text-align: center;
@@ -153,8 +187,17 @@ body {
   bottom: 50px;
   transition: left 200ms ease-in 0ms;
   background-color: white;
-  max-height: 400px;
+  max-height: 440px;
+}
+.backpack-wrapper .count {
+  height: 30px;
+  text-align: center;
+  padding: 5px;
+  line-height: 30px;
+}
+.backpack-wrapper .backpack-table-wrapper {
   overflow: auto;
+  max-height: 400px;
 }
 .backpack-wrapper.open {
   left: 0;

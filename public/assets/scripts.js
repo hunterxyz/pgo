@@ -175,6 +175,10 @@ var updateItems = function (result) {
     var $itemCount = $('<td><div class="item-count"></td>');
     var $itemSelection = $('<td/>').addClass('item-selection');
     var $itemRecycle = $('<td><input value="0"/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
+    var $counter = $('.backpack-wrapper .count');
+
+    $counter.find('.count').text('???');
+    $counter.find('.total').text(result.playerObject.max_item_storage);
 
     $itemrow.append($itemImage);
     $itemrow.append($itemCount);
@@ -245,6 +249,66 @@ var updateItems = function (result) {
     });
 };
 
+var openDetails = function (pokemon) {
+
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+
+    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
+
+    pokemonDetails.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+    pokemonDetails.find('.points').text(pokemon.cp);
+    pokemonDetails.find('.transfer-button').off('click');
+    pokemonDetails.find('.transfer-button').on('click', function () {
+
+        $.ajax({
+            method: 'POST',
+            url: '/player/transfer',
+            data: JSON.stringify({id: pokemon.id}),
+            contentType: 'application/json',
+            dataType: 'json'
+        }).success(function (result) {
+
+            pokemonDetailsWrapper.find('.close').click();
+            updatePokemonList(result);
+
+        }).fail(function () {
+            alert('no data');
+        });
+
+    });
+
+    pokemonDetailsWrapper.addClass('open');
+
+};
+
+var updatePokemonList = function (result) {
+    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
+    $pokemonsContainer.html('');
+
+    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
+
+    var $counter = $('.pokemons-wrapper .count');
+
+    $counter.find('.count').text(result.inventory.pokemons.length);
+    $counter.find('.total').text(result.playerObject.max_pokemon_storage);
+
+    _.each(pokemonsList, function (pokemon) {
+
+        var pokemonTemplate = $('.templates .pokemon').clone();
+
+        pokemonTemplate.find('.cp .points').text(pokemon.cp);
+
+        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+
+        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
+        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
+        pokemonTemplate.find('.name').text(pokemon.name);
+        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon));
+
+        $pokemonsContainer.append(pokemonTemplate);
+
+    });
+};
 var updatePlayerStatus = function (result) {
 
     $('.player-status .level').text(result.player.level);
@@ -269,26 +333,33 @@ var updatePlayerStatus = function (result) {
     });
 
     updateItems(result);
+    updatePokemonList(result);
 
-    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
-    $pokemonsContainer.html('');
+};
 
-    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
+var limitMarkers = function (markers, limit) {
 
-    _.each(pokemonsList, function (pokemon) {
+    var length = markers.length;
 
-        var pokemonTemplate = $('.templates .pokemon').clone();
+    if (length > limit) {
 
-        pokemonTemplate.find('.cp .points').text(pokemon.cp);
-        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+        var toRemove = length - limit;
 
-        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
-        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
-        pokemonTemplate.find('.name').text(pokemon.name);
+        for (var i = 0; i < toRemove; i++) {
 
-        $pokemonsContainer.append(pokemonTemplate);
+            var marker = markers[i];
 
-    });
+            if (marker.setMap) {
+                marker.setMap(null);
+            }
+
+        }
+
+        markers = markers.slice(toRemove);
+
+    }
+
+    return markers;
 
 };
 
@@ -323,7 +394,7 @@ var clickOnPokemon = function () {
                     alert('You reached your pokemon limit.');
                     break;
                 case 1:
-                    alert('POKEMON CAUGHT!!! :D');
+                    alert('Pokemon Caught!!! :D');
                     marker.setMap(null);
                     break;
                 case 2:
@@ -425,29 +496,25 @@ var createSpawnMarker = function (map, spawnPoint) {
 
 var createSpawnMarkers = function (map, markers) {
 
-    _.each(markers, function (marker) {
+    if (Array.isArray(markers)) {
 
-        if (Array.isArray(marker)) {
-            _.each(marker, function (subMarker) {
+        _.each(markers, function (marker) {
+            createSpawnMarkers(map, marker);
+        });
 
-                if (!_.some(spawnMarkers, function (spawnMarker) {
-                        return spawnMarker.latitude === subMarker.latitude && spawnMarker.longitude === subMarker.longitude;
-                    })) {
-                    createSpawnMarker(map, subMarker);
-                }
+    } else {
 
-            });
+        if (!_.some(spawnMarkers, function (spawnMarker) {
 
-        } else {
+                var samePosition = spawnMarker.spawnPoint.latitude === markers.latitude && spawnMarker.spawnPoint.longitude === markers.longitude;
 
-            if (!_.some(spawnMarkers, function (spawnMarker) {
-                    return spawnMarker.latitude === marker.latitude && spawnMarker.longitude === marker.longitude;
-                })) {
-                createSpawnMarker(map, marker);
-            }
+                return samePosition;
+
+            })) {
+            createSpawnMarker(map, markers);
         }
+    }
 
-    });
 };
 
 var parseLoot = function (loot) {
@@ -545,6 +612,8 @@ var createPokestopMarker = function (map, pokestop) {
 
     pokestopMarkers.push(marker);
 
+    pokestopMarkers = limitMarkers(pokestopMarkers, 500);
+
 };
 
 var updateCooldown = function (marker, pokestop) {
@@ -601,6 +670,7 @@ var populateMap = function (objects) {
     if (objects.showAll) {
         updateNearbyRadar(objects.nearby);
         createSpawnMarkers(map, objects.spawn);
+        spawnMarkers = limitMarkers(spawnMarkers, 500);
     }
 
     //mapHistory.push(objects);
@@ -845,6 +915,7 @@ var initBackpack = function () {
 var initPokemonList = function () {
     var $pokemonButton = $('.pokemon-button');
     var $pokemonsWrapper = $('.pokemons-wrapper');
+    var $pokemonsDetailsWrapper = $('.pokemon-details-wrapper');
 
     $pokemonButton.on('click', function () {
         $pokemonsWrapper.addClass('open');
@@ -852,6 +923,10 @@ var initPokemonList = function () {
 
     $pokemonsWrapper.find('.close').on('click', function () {
         $pokemonsWrapper.removeClass('open');
+    });
+
+    $pokemonsDetailsWrapper.find('.close').on('click', function () {
+        $pokemonsDetailsWrapper.removeClass('open');
     });
 };
 

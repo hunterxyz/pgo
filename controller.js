@@ -168,9 +168,10 @@ Controller.prototype.startMapScanner = function (user) {
 
     var self = this;
 
-    setInterval(function () {
+    var currentUserString = user || 'pokemonGo';
 
-        var currentUserString = user || 'pokemonGo';
+    this[currentUserString + 'Scanner'] = setInterval(function () {
+
         var currentUser = self[currentUserString];
 
         currentUser.GetMapObjects().then(function (objects) {
@@ -201,6 +202,12 @@ Controller.prototype.startMapScanner = function (user) {
 
 };
 
+Controller.prototype.stopMapScanner = function (user) {
+
+    clearInterval(this[user + 'Scanner']);
+
+};
+
 Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
 
     var currentUserString = user || 'pokemonGo';
@@ -220,6 +227,7 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
 
     var playerInfo = yield currentUser.login(_username, _password, _provider);
 
+    currentUser.playerObject = yield currentUser.GetPlayer();
     currentUser.logged = true;
 
     if (!doNotScan) {
@@ -245,6 +253,39 @@ Controller.prototype.recycleRoute = Q.async(function*(req, res) {
 
 });
 
+Controller.prototype.transferRoute = Q.async(function*(req, res) {
+
+    var id = Number(req.body.id);
+
+    var pokemonToTransfer = _.find(this.externalPlayer.inventory.pokemons, function (pokemon) {
+
+        return pokemon.id.toNumber() === id;
+
+    });
+
+    yield pokemonToTransfer.release();
+
+    yield this.externalPlayer.inventory.update();
+
+    res.send(serialize(this.externalPlayer));
+
+});
+
+Controller.prototype.evolveRoute = Q.async(function*(req, res) {
+    yield;
+});
+
+//Controller.prototype.checkHatchedEggsRoute = Q.async(function*(req, res) {
+//
+//    yield this.externalPlayer.player.hatchedEggs();
+//
+//    yield this.externalPlayer.inventory.update();
+//
+//    res.send(serialize(this.externalPlayer));
+//
+//});
+
+
 Controller.prototype.playerLogin = Q.async(function*(req, res) {
 
     var lat = req.body.lat;
@@ -261,6 +302,19 @@ Controller.prototype.playerLogin = Q.async(function*(req, res) {
     res.send(playerInfo);
 
 });
+
+
+Controller.prototype.playerLogout = function(req, res) {
+
+    this.playerUsername = null;
+    this.playerPassword = null;
+    this.playerProvider = null;
+
+    this.stopMapScanner('externalPlayer');
+
+    res.send({});
+
+};
 
 Controller.prototype.lootPokestop = Q.async(function*(req, res) {
 

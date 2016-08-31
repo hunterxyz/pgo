@@ -129,15 +129,14 @@ html, body {
     }
 }
 
-.pokemons-wrapper{
+.pokemons-wrapper, .pokemon-details-wrapper {
     position: absolute;
-    height: 600px;
+    height: 640px;
     width: 300px;
     background-color: white;
     bottom: 50px;
     left: -300px;
     transition: left 200ms ease-in 0ms;
-    overflow: auto;
 
     &.open {
         left: 0;
@@ -149,20 +148,66 @@ html, body {
         right: 5px;
         cursor: pointer;
     }
+}
 
-    .pokemons{
+.pokemon-details-wrapper {
+
+    .pokemon-details {
+
+        .cp{
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            .points{
+                font-size: 24px;
+            }
+        }
+
+        .image-wrapper {
+            text-align: center;
+        }
+    }
+
+    .button {
+        width: 170px;
+        height: 30px;
+        border-radius: 30px;
+        background-color: skyblue;
+        margin: 0 auto;
+        cursor: pointer;
+        color: white;
+        text-align: center;
+        line-height: 30px;
+    }
+
+}
+
+.pokemons-wrapper {
+
+    .count{
+        height: 30px;
+        text-align: center;
+        padding: 5px;
+        line-height: 30px;
+    }
+
+    .pokemons {
         width: 100%;
+        overflow: auto;
+        height: 600px;
 
-        .pokemon{
+        .pokemon {
             width: 25%;
             height: 100px;
             float: left;
             text-align: center;
             font-size: 12px;
+            cursor: pointer;
 
-            .image-wrapper{
+            .image-wrapper {
                 text-align: center;
-                img{
+                img {
                     height: 50px;
                 }
             }
@@ -179,8 +224,19 @@ html, body {
     bottom: 50px;
     transition: left 200ms ease-in 0ms;
     background-color: white;
-    max-height: 400px;
-    overflow: auto;
+    max-height: 440px;
+
+    .count{
+        height: 30px;
+        text-align: center;
+        padding: 5px;
+        line-height: 30px;
+    }
+
+    .backpack-table-wrapper{
+        overflow: auto;
+        max-height: 400px;
+    }
 
     &.open {
         left: 0;
