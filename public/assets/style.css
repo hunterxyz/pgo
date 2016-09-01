@@ -170,6 +170,7 @@ body {
 }
 .pokemon-details-wrapper .currencies td img {
   height: 20px;
+  vertical-align: text-bottom;
 }
 .pokemons-wrapper .count {
   height: 30px;
