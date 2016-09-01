@@ -180,6 +180,20 @@ body {
 .pokemons-wrapper .pokemons .pokemon .image-wrapper img {
   height: 50px;
 }
+.eta {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 300px;
+  height: 100px;
+  background-color: white;
+  margin-left: -150px;
+  opacity: 0;
+  transition: opacity 200ms linear 0ms;
+}
+.eta.visible {
+  opacity: 1;
+}
 .backpack-wrapper {
   position: absolute;
   width: 300px;

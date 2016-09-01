@@ -362,7 +362,7 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
 
         if (pokemon) {
 
-            yield pokemon.encounter();
+            var encounteredPokemon = yield pokemon.encounter();
 
             if (useRazzBerry && this.externalPlayer.inventory.items.razzBerry.count) {
                 yield this.externalPlayer.useCapture(this.externalPlayer.inventory.items.razzBerry.item_id, pokemon);
@@ -374,7 +374,8 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
 
             var response = serialize(this.externalPlayer);
 
-            response.catchResult = catchResult;
+            response.encounteredPokemon = serialize(encounteredPokemon);
+            response.catchResult = serialize(catchResult);
 
             res.send(response);
 
@@ -440,11 +441,9 @@ Controller.prototype.walkToPoint = function (req, res) {
 
     };
 
-    if (!walkToNextpoint()) {
-        this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
-    }
+    this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
 
-    res.send({distance: distance});
+    res.send({distance: distance, time: Math.ceil(seconds/stepFrequency) * stepFrequency});
 
 };
 

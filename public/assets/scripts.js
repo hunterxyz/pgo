@@ -490,7 +490,7 @@ var createSpawnMarker = function (map, spawnPoint) {
         icon:       image,
         clickable:  false,
         spawnPoint: spawnPoint,
-        zIndex:     0
+        zIndex:     1
     });
 
     marker.setMap(map);
@@ -608,7 +608,7 @@ var createPokestopMarker = function (map, pokestop) {
         icon:      image,
         clickable: true,
         pokestop:  pokestop,
-        zIndex:    0
+        zIndex:    1
     });
 
     marker.setMap(map);
@@ -702,6 +702,42 @@ socket.on('connect', function () {
 
 });
 
+var startCoutdown = function (etaSeconds) {
+
+    $('.eta').TimeCircles().destroy();
+    $('.eta').addClass('visible');
+    $('.eta').data('timer', etaSeconds).TimeCircles({
+        count_past_zero: false,
+        time:            {
+            Days:    {
+                text:  'Days',
+                color: '#FFCC66',
+                show:  false
+            },
+            Hours:   {
+                text:  'Hours',
+                color: '#99CCFF',
+                show:  true
+            },
+            Minutes: {
+                text:  'Minutes',
+                color: '#BBFFBB',
+                show:  true
+            },
+            Seconds: {
+                text:  'Seconds',
+                color: '#FF9999',
+                show:  true
+            }
+        }
+    }).addListener(function (unit, value, total) {
+        if (total <= 0) {
+            $(this).removeClass('visible');
+        }
+    });
+
+};
+
 function afterLogin(result) {
 
     var coords = result.location;
@@ -718,6 +754,12 @@ function afterLogin(result) {
 
         clearCoordinates();
 
+        var startPosition = playerMarker.getPosition().toJSON();
+
+        drawCoordinates(startPosition);
+        playerMarker.setPosition(startPosition);
+        moveCircles(startPosition);
+
         destinationPoint.setPosition(e.latLng);
         destinationPoint.setMap(map);
 
@@ -732,7 +774,9 @@ function afterLogin(result) {
             dataType:    'json'
         }).success(function (result) {
 
+            startCoutdown(result.time);
             console.log(result.distance + ' meters');
+            console.log(result.time + ' seconds');
 
         }).fail(function () {
             alert('no data');
@@ -805,7 +849,7 @@ var initPlayerMarker = function () {
 
     playerMarker = new google.maps.Marker({
         icon:   playerMarkerImage,
-        zIndex: 2
+        zIndex: 100
     });
 
 };
@@ -942,20 +986,20 @@ $(document).ready(function () {
         start:           false,
         total_duration:  10,
         count_past_zero: false,
-        'time':          {
-            'Days':    {
-                'show': false
+        time:            {
+            Days:    {
+                show: false
             },
-            'Hours':   {
-                'show': false
+            Hours:   {
+                show: false
             },
-            'Minutes': {
-                'show': false
+            Minutes: {
+                show: false
             },
-            'Seconds': {
-                'text':  'Next scan in:',
-                'color': '#FF9999',
-                'show':  true
+            Seconds: {
+                text:  'Seconds:',
+                color: '#FF9999',
+                show:  true
             }
         }
     });

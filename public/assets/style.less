@@ -154,12 +154,12 @@ html, body {
 
     .pokemon-details {
 
-        .cp{
+        .cp {
             padding: 10px;
             text-align: center;
             font-size: 14px;
             font-weight: bold;
-            .points{
+            .points {
                 font-size: 24px;
             }
         }
@@ -185,7 +185,7 @@ html, body {
 
 .pokemons-wrapper {
 
-    .count{
+    .count {
         height: 30px;
         text-align: center;
         padding: 5px;
@@ -216,6 +216,22 @@ html, body {
     }
 }
 
+.eta {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 300px;
+    height: 100px;
+    background-color: white;
+    margin-left: -150px;
+    opacity: 0;
+    transition: opacity 200ms linear 0ms;
+
+    &.visible{
+        opacity: 1;
+    }
+}
+
 .backpack-wrapper {
 
     position: absolute;
@@ -226,14 +242,14 @@ html, body {
     background-color: white;
     max-height: 440px;
 
-    .count{
+    .count {
         height: 30px;
         text-align: center;
         padding: 5px;
         line-height: 30px;
     }
 
-    .backpack-table-wrapper{
+    .backpack-table-wrapper {
         overflow: auto;
         max-height: 400px;
     }
