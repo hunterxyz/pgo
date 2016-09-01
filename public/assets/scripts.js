@@ -93,10 +93,10 @@ var moveCircles = function (latLng) {
 var ms2time = function msToTime(duration) {
 
     var isNegative = false;
-    if (duration < 0) {
-        isNegative = true;
-        duration = Math.abs(duration);
-    }
+    //if (duration < 0) {
+    //    isNegative = true;
+    //    duration = Math.abs(duration);
+    //}
 
     var seconds = parseInt((duration / 1000) % 60, 10);
     var minutes = parseInt((duration / (1000 * 60)) % 60, 10);
@@ -254,14 +254,44 @@ var updateItems = function (result) {
     });
 };
 
-var openDetails = function (pokemon) {
+var findFamily = function (pokemon, pokedex) {
+
+    if (pokemon.prev_evolution) {
+
+        return findFamily(_.find(pokedex, {num: pokemon.prev_evolution[0].num}), pokedex);
+
+    } else {
+
+        return pokemon;
+
+    }
+
+};
+
+var findCandies = function (pokemon, result) {
+
+    var familyPokemon = findFamily(pokemon, result.pokedex.pokemon);
+
+    var candy = _.find(result.inventory.candies, function (candy) {
+        return candy.family_id === Number(familyPokemon.num);
+    });
+
+    return {candies: candy.candy, name: familyPokemon.name};
+
+};
+
+var openDetails = function (pokemon, result) {
 
     var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
 
     var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
 
-    pokemonDetails.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+    pokemonDetails.find('img.pokemon-picture').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
     pokemonDetails.find('.points').text(pokemon.cp);
+    var pokemonFamilyCandies = findCandies(pokemon, result);
+    pokemonDetails.find('.total-candies').text(pokemonFamilyCandies.candies);
+    pokemonDetails.find('.candy-family').text(pokemonFamilyCandies.name);
+    pokemonDetails.find('.total-stardust').text(result.playerObject.currencies[1].amount);
     pokemonDetails.find('.transfer-button').off('click');
     pokemonDetails.find('.transfer-button').on('click', function () {
 
@@ -308,7 +338,7 @@ var updatePokemonList = function (result) {
         var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
         pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
         pokemonTemplate.find('.name').text(pokemon.name);
-        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon));
+        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon, result));
 
         $pokemonsContainer.append(pokemonTemplate);
 

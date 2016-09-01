@@ -154,6 +154,22 @@ body {
   color: white;
   text-align: center;
   line-height: 30px;
+  margin-top: 25px;
+}
+.pokemon-details-wrapper .currencies {
+  width: 260px;
+  font-size: 11px;
+  text-align: center;
+  margin: 0 auto;
+}
+.pokemon-details-wrapper .currencies td {
+  width: 50%;
+}
+.pokemon-details-wrapper .currencies td .count {
+  font-size: 20px;
+}
+.pokemon-details-wrapper .currencies td img {
+  height: 20px;
 }
 .pokemons-wrapper .count {
   height: 30px;

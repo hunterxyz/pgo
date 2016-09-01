@@ -25,6 +25,7 @@ require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
 //var XDate = require('xdate');
+var pokedex = require('pokemon-go-pokedex');
 var PokemonGo = require('pokemongo-api').default;
 
 PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
@@ -41,7 +42,7 @@ PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
             message: {
                 item_id:        itemId,
                 encounter_id:   pokemon.encounter_id,
-                spawn_point_id: pokemon.spawn_point_id,
+                spawn_point_id: pokemon.spawn_point_id
             }
         }
     ]);
@@ -228,6 +229,7 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
     var playerInfo = yield currentUser.login(_username, _password, _provider);
 
     currentUser.playerObject = yield currentUser.GetPlayer();
+    currentUser.pokedex = pokedex;
     currentUser.logged = true;
 
     if (!doNotScan) {
@@ -443,7 +445,7 @@ Controller.prototype.walkToPoint = function (req, res) {
 
     this.walkingInterval = setInterval(walkToNextpoint, 1000 * stepFrequency);
 
-    res.send({distance: distance, time: Math.ceil(seconds/stepFrequency) * stepFrequency});
+    res.send({distance: distance, time: Math.ceil(seconds / stepFrequency) * stepFrequency});
 
 };
 
