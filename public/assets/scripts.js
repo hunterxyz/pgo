@@ -70,12 +70,12 @@ var drawCoordinates = function (coordinates) {
 
     var coordinateMarker = new google.maps.Marker({
         position: {lat: coordinates.lat, lng: coordinates.lng},
-        map: map,
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
+        map:      map,
+        icon:     {
+            path:  google.maps.SymbolPath.CIRCLE,
             scale: 2
         },
-        zIndex: 1
+        zIndex:   1
     });
 
     coordinateMarkers.push(coordinateMarker);
@@ -177,7 +177,12 @@ var updateItems = function (result) {
     var $itemRecycle = $('<td><input value="0"/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
     var $counter = $('.backpack-wrapper .count');
 
-    $counter.find('.count').text('???');
+    $counter.find('.count').text(_.sum(_.map(result.inventory.items, function (item) {
+
+        return item.count ? item.count : 0;
+
+    })));
+
     $counter.find('.total').text(result.playerObject.max_item_storage);
 
     $itemrow.append($itemImage);
@@ -234,11 +239,11 @@ var updateItems = function (result) {
 
                 if (data.count > 0) {
                     $.ajax({
-                        method: 'POST',
-                        url: '/player/recycle',
-                        data: JSON.stringify(data),
+                        method:      'POST',
+                        url:         '/player/recycle',
+                        data:        JSON.stringify(data),
                         contentType: 'application/json',
-                        dataType: 'json'
+                        dataType:    'json'
                     }).success(updatePlayerStatus);
                 }
 
@@ -261,11 +266,11 @@ var openDetails = function (pokemon) {
     pokemonDetails.find('.transfer-button').on('click', function () {
 
         $.ajax({
-            method: 'POST',
-            url: '/player/transfer',
-            data: JSON.stringify({id: pokemon.id}),
+            method:      'POST',
+            url:         '/player/transfer',
+            data:        JSON.stringify({id: pokemon.id}),
             contentType: 'application/json',
-            dataType: 'json'
+            dataType:    'json'
         }).success(function (result) {
 
             pokemonDetailsWrapper.find('.close').click();
@@ -368,20 +373,20 @@ var clickOnPokemon = function () {
     var marker = this;
 
     var data = {
-        location: {
+        location:     {
             lat: this.pokemon.latitude,
             lng: this.pokemon.longitude
         },
-        ball: $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
+        ball:         $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
         useRazzBerry: $('.backpack .item.berry input[type=checkbox]:checked').length
     };
 
     $.ajax({
-        method: 'POST',
-        url: '/player/catchpokemon',
-        data: JSON.stringify(data),
+        method:      'POST',
+        url:         '/player/catchpokemon',
+        data:        JSON.stringify(data),
         contentType: 'application/json',
-        dataType: 'json'
+        dataType:    'json'
     }).success(function (result) {
 
         if (!result.error) {
@@ -439,20 +444,20 @@ var createPokeMarkers = function (map, markers) {
         }
 
         var image = {
-            url: '/assets/images/pokemons/' + pokemon.num + '.png',
-            size: new google.maps.Size(120, 120),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(20, 20),
+            url:        '/assets/images/pokemons/' + pokemon.num + '.png',
+            size:       new google.maps.Size(120, 120),
+            origin:     new google.maps.Point(0, 0),
+            anchor:     new google.maps.Point(20, 20),
             scaledSize: new google.maps.Size(40, 40)
         };
 
         var marker = new google.maps.Marker({
             position: {lat: pokemon.latitude, lng: pokemon.longitude},
-            map: map,
-            icon: image,
-            pokemon: pokemon,
-            title: title,
-            zIndex: 1
+            map:      map,
+            icon:     image,
+            pokemon:  pokemon,
+            title:    title,
+            zIndex:   1
         });
 
         if (pokemon.time_till_hidden_ms < 0) {
@@ -472,20 +477,20 @@ var createPokeMarkers = function (map, markers) {
 var createSpawnMarker = function (map, spawnPoint) {
 
     var image = {
-        url: '/assets/images/pokemon-egg.png',
-        size: new google.maps.Size(80, 86),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(6, 6),
+        url:        '/assets/images/pokemon-egg.png',
+        size:       new google.maps.Size(80, 86),
+        origin:     new google.maps.Point(0, 0),
+        anchor:     new google.maps.Point(6, 6),
         scaledSize: new google.maps.Size(12, 12)
     };
 
     var marker = new google.maps.Marker({
-        position: {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
-        map: map,
-        icon: image,
-        clickable: false,
+        position:   {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
+        map:        map,
+        icon:       image,
+        clickable:  false,
         spawnPoint: spawnPoint,
-        zIndex: 0
+        zIndex:     0
     });
 
     marker.setMap(map);
@@ -530,10 +535,10 @@ var resetPokestopIconIn = function (marker, timeout) {
     clearTimeout(marker.timeout);
 
     var image = {
-        url: '/assets/images/pokestop-pink.png',
-        size: new google.maps.Size(94, 200),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(12, 50),
+        url:        '/assets/images/pokestop-pink.png',
+        size:       new google.maps.Size(94, 200),
+        origin:     new google.maps.Point(0, 0),
+        anchor:     new google.maps.Point(12, 50),
         scaledSize: new google.maps.Size(23, 50)
     };
 
@@ -542,10 +547,10 @@ var resetPokestopIconIn = function (marker, timeout) {
     marker.timeout = setTimeout(function () {
 
         var image = {
-            url: '/assets/images/pokestop.png',
-            size: new google.maps.Size(94, 200),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(12, 50),
+            url:        '/assets/images/pokestop.png',
+            size:       new google.maps.Size(94, 200),
+            origin:     new google.maps.Point(0, 0),
+            anchor:     new google.maps.Point(12, 50),
             scaledSize: new google.maps.Size(23, 50)
         };
 
@@ -561,11 +566,11 @@ var clickOnPokeStop = function () {
     var marker = this;
 
     $.ajax({
-        method: 'POST',
-        url: '/player/lootpokestop',
-        data: JSON.stringify({id: psid}),
+        method:      'POST',
+        url:         '/player/lootpokestop',
+        data:        JSON.stringify({id: psid}),
         contentType: 'application/json',
-        dataType: 'json'
+        dataType:    'json'
     }).success(function (result) {
 
         if (!result.loot || result.error) {
@@ -590,20 +595,20 @@ var clickOnPokeStop = function () {
 var createPokestopMarker = function (map, pokestop) {
 
     var image = {
-        url: '/assets/images/pokestop.png',
-        size: new google.maps.Size(94, 200),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(12, 50),
+        url:        '/assets/images/pokestop.png',
+        size:       new google.maps.Size(94, 200),
+        origin:     new google.maps.Point(0, 0),
+        anchor:     new google.maps.Point(12, 50),
         scaledSize: new google.maps.Size(23, 50)
     };
 
     var marker = new google.maps.Marker({
-        position: {lat: pokestop.latitude, lng: pokestop.longitude},
-        map: map,
-        icon: image,
+        position:  {lat: pokestop.latitude, lng: pokestop.longitude},
+        map:       map,
+        icon:      image,
         clickable: true,
-        pokestop: pokestop,
-        zIndex: 0
+        pokestop:  pokestop,
+        zIndex:    0
     });
 
     marker.setMap(map);
@@ -720,11 +725,11 @@ function afterLogin(result) {
         data.stepFrequency = Number($('select[name=freq]').val());
 
         $.ajax({
-            method: 'POST',
-            url: 'walktoPoint',
-            data: JSON.stringify(data),
+            method:      'POST',
+            url:         'walktoPoint',
+            data:        JSON.stringify(data),
             contentType: 'application/json',
-            dataType: 'json'
+            dataType:    'json'
         }).success(function (result) {
 
             console.log(result.distance + ' meters');
@@ -739,45 +744,45 @@ function afterLogin(result) {
 var initMap = function () {
     map = new google.maps.Map($('.map-placeholder')[0], {
         center: latLng,
-        zoom: 14
+        zoom:   14
     });
 };
 
 var initCircles = function () {
     radarCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor: '#FF0000',
-        fillOpacity: 0.1,
-        map: map,
-        radius: 200,
-        clickable: false
+        fillColor:    '#FF0000',
+        fillOpacity:  0.1,
+        map:          map,
+        radius:       200,
+        clickable:    false
     });
 
     pokemonInteractionCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor: '#FF0000',
-        fillOpacity: 0.1,
-        map: map,
-        radius: 70,
-        clickable: false
+        fillColor:    '#FF0000',
+        fillOpacity:  0.1,
+        map:          map,
+        radius:       70,
+        clickable:    false
     });
 
     interactionCircle = new google.maps.Circle({
         strokeWeight: 0,
-        fillColor: '#FF0000',
-        fillOpacity: 0.1,
-        map: map,
-        radius: 40,
-        clickable: false
+        fillColor:    '#FF0000',
+        fillOpacity:  0.1,
+        map:          map,
+        radius:       40,
+        clickable:    false
     });
 };
 
 var botLogin = function () {
     $.ajax({
-        method: 'GET',
-        url: '/amilogged/pokemonGo',
+        method:      'GET',
+        url:         '/amilogged/pokemonGo',
         contentType: 'application/json',
-        dataType: 'json'
+        dataType:    'json'
     }).success(function (result) {
 
         var latLng = {lat: result.location.lat, lng: result.location.lng};
@@ -791,15 +796,15 @@ var botLogin = function () {
 var initPlayerMarker = function () {
 
     var playerMarkerImage = {
-        url: '/assets/images/pokemarker.png',
-        size: new google.maps.Size(179, 250),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(15, 40),
+        url:        '/assets/images/pokemarker.png',
+        size:       new google.maps.Size(179, 250),
+        origin:     new google.maps.Point(0, 0),
+        anchor:     new google.maps.Point(15, 40),
         scaledSize: new google.maps.Size(29, 40)
     };
 
     playerMarker = new google.maps.Marker({
-        icon: playerMarkerImage,
+        icon:   playerMarkerImage,
         zIndex: 2
     });
 
@@ -814,11 +819,11 @@ var initBotMarker = function () {
 var initdestinationPointMarker = function () {
     destinationPoint = new google.maps.Marker({
         position: latLng,
-        icon: {
-            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        icon:     {
+            path:  google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
             scale: 2
         },
-        zIndex: 1
+        zIndex:   1
     });
 };
 
@@ -841,11 +846,11 @@ var login = function login(loginCoords) {
     data.provider = $('[name=provider]').val();
 
     $.ajax({
-        method: 'POST',
-        url: '/player/login',
-        data: JSON.stringify(data),
+        method:      'POST',
+        url:         '/player/login',
+        data:        JSON.stringify(data),
         contentType: 'application/json',
-        dataType: 'json'
+        dataType:    'json'
     }).success(function (result) {
 
         afterLogin(result);
@@ -867,7 +872,7 @@ var initPlayerLoginForm = function (loginCoords) {
         var rightClickMenu = $('.right-click-menu');
 
         rightClickMenu.css({
-            top: e.pixel.y,
+            top:  e.pixel.y,
             left: e.pixel.x
         }).show();
 
@@ -889,7 +894,6 @@ var initPlayerLoginForm = function (loginCoords) {
         $('.go').on('click', $.proxy(login, this, loginCoords));
 
     });
-
 
     $loginHere.find('li').on('click', function () {
         $loginHere.hide();
@@ -935,23 +939,23 @@ $(document).ready(function () {
     var loginCoords;
 
     $('.nearby-wrapper .bot-timer').TimeCircles({
-        start: false,
-        total_duration: 10,
+        start:           false,
+        total_duration:  10,
         count_past_zero: false,
-        'time': {
-            'Days': {
+        'time':          {
+            'Days':    {
                 'show': false
             },
-            'Hours': {
+            'Hours':   {
                 'show': false
             },
             'Minutes': {
                 'show': false
             },
             'Seconds': {
-                'text': 'Next scan in:',
+                'text':  'Next scan in:',
                 'color': '#FF9999',
-                'show': true
+                'show':  true
             }
         }
     });
@@ -965,10 +969,10 @@ $(document).ready(function () {
     initdestinationPointMarker();
 
     $.ajax({
-        method: 'GET',
-        url: '/amilogged/externalPlayer',
+        method:      'GET',
+        url:         '/amilogged/externalPlayer',
         contentType: 'application/json',
-        dataType: 'json'
+        dataType:    'json'
     }).success(function (result) {
 
         afterLogin(result);
