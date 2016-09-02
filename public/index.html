@@ -2,7 +2,8 @@
 <html lang="en">
     <head>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC70v55VW9WMwRud7E9Vv1JJjS4r7irtK0"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
         <script src="https://cdn.jsdelivr.net/xdate/0.8/xdate.min.js"></script>
         <script src="/assets/socket.io.js"></script>
@@ -32,6 +33,7 @@
         </div>
         <div class="frequency">
             <select name="freq">
+                <option value="0.5">0.5 sec</option>
                 <option value="1">1 sec</option>
                 <option value="2">2 sec</option>
                 <option selected value="5">5 sec</option>
@@ -91,8 +93,25 @@
 
         <div class="pokemons-wrapper">
             <div class="close">X</div>
-            <div class="count"><span class="count"></span>/<span class="total"></span></div>
-            <div class="pokemons"></div>
+
+            <div class="pokemon-tabs">
+                <ul>
+                    <li class="pokemons-tab-link">
+                        <a href="#pokemons">
+                            <span>Pokemons</span><br/>
+                            <span class="counter"><span class="count"></span>/<span class="total"></span></span>
+                        </a>
+                    </li>
+                    <li class="eggs-tab-link">
+                        <a href="#eggs">
+                            <span>Eggs</span><br/>
+                            <span class="counter"><span class="count"></span>/<span class="total">9</span></span>
+                        </a>
+                    </li>
+                </ul>
+                <div id="pokemons" class="pokemons"></div>
+                <div id="eggs" class="eggs"></div>
+            </div>
         </div>
 
         <div class="pokemon-details-wrapper">
@@ -119,7 +138,7 @@
 
         <div class="walking-data">
             <div class="eta"></div>
-            <div class="odometer"><span class="distance-so-far"></span> of <span class="total-distance"></span> km </div>
+            <div class="odometer"><span class="distance-so-far"></span> of <span class="total-distance"></span> km</div>
         </div>
 
         <div class="templates">
@@ -133,6 +152,15 @@
                     <div class="hp-level"></div>
                 </div>
                 <div class="name"></div>
+            </div>
+
+            <div class="egg">
+                <div class="image-wrapper">
+                    <img src="/assets/images/pokemon-egg.png" alt="">
+                </div>
+                <div class="egg-kms"><span class="walked"></span><span class="separator">/</span><span
+                        class="target"></span> km
+                </div>
             </div>
 
         </div>

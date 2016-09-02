@@ -25,6 +25,12 @@ PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
 
 });
 
+PokemonGo.prototype.useIncubator = Q.async(function*(item_id, pokemon) {
+
+    return yield this.Call([{request: 'USE_ITEM_EGG_INCUBATOR', message: {item_id, pokemon_id: pokemon.pokemon_id}}]);
+
+});
+
 PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
 
     return yield this.Call([
@@ -268,15 +274,23 @@ Controller.prototype.transferRoute = Q.async(function*(req, res) {
 //     yield;
 // });
 
-//Controller.prototype.checkHatchedEggsRoute = Q.async(function*(req, res) {
-//
-//    yield this.externalPlayer.player.hatchedEggs();
-//
-//    yield this.externalPlayer.inventory.update();
-//
-//    res.send(serialize(this.externalPlayer));
-//
-//});
+Controller.prototype.checkHatchedEggs = Q.async(function*() {
+
+    var hatchedEggs = yield this.externalPlayer.player.hatchedEggs();
+
+    var hatchedEggsResponse = hatchedEggs.GetHatchedEggsResponse;
+
+    if (hatchedEggsResponse.success && hatchedEggsResponse.pokemon_id.length > 0) {
+
+        yield this.externalPlayer.inventory.update();
+
+        var response = serialize(this.externalPlayer);
+        response.GetHatchedEggsResponse = serialize(hatchedEggsResponse);
+
+        this.socket.emit('hatchedEgg', response);
+    }
+
+});
 
 Controller.prototype.loginRoute = Q.async(function*(req, res) {
 
@@ -410,6 +424,8 @@ Controller.prototype.walkToPoint = function (req, res) {
         var isLastStep = false;
         var stepDistance = metersPerSecond * stepFrequency;
         var nexStepDistance = ((timer / stepFrequency)) * stepDistance;
+
+        self.checkHatchedEggs();
 
         if (timer > seconds || nexStepDistance > distance) {
             stepDistance = distance % (metersPerSecond * stepFrequency);

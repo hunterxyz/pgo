@@ -119,7 +119,7 @@ body {
 .pokemons-wrapper,
 .pokemon-details-wrapper {
   position: absolute;
-  height: 640px;
+  height: 650px;
   width: 300px;
   background-color: white;
   bottom: 50px;
@@ -177,11 +177,46 @@ body {
   height: 20px;
   vertical-align: text-bottom;
 }
-.pokemons-wrapper .count {
-  height: 30px;
+.pokemons-wrapper .pokemon-tabs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pokemons-wrapper .pokemon-tabs ul li {
+  float: left;
+  width: 50%;
   text-align: center;
-  padding: 5px;
-  line-height: 30px;
+  height: 50px;
+}
+.pokemons-wrapper .pokemon-tabs ul li a {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: bold;
+  color: black;
+  line-height: 18px;
+  width: 100%;
+  overflow: auto;
+  padding: 7px;
+  box-sizing: border-box;
+  height: 50px;
+  float: left;
+}
+.pokemons-wrapper .pokemon-tabs ul li a:active {
+  border: none;
+}
+.pokemons-wrapper .eggs {
+  width: 100%;
+  overflow: auto;
+  height: 600px;
+}
+.pokemons-wrapper .eggs .egg {
+  width: 100px;
+  float: left;
+  text-align: center;
+  margin-top: 20px;
+}
+.pokemons-wrapper .eggs .egg img {
+  height: 60px;
 }
 .pokemons-wrapper .pokemons {
   width: 100%;
@@ -190,11 +225,13 @@ body {
 }
 .pokemons-wrapper .pokemons .pokemon {
   width: 25%;
-  height: 100px;
+  height: 90px;
   float: left;
   text-align: center;
   font-size: 12px;
   cursor: pointer;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 .pokemons-wrapper .pokemons .pokemon .image-wrapper {
   text-align: center;
@@ -239,12 +276,6 @@ body {
   transition: left 200ms ease-in 0ms;
   background-color: white;
   max-height: 440px;
-}
-.backpack-wrapper .count {
-  height: 30px;
-  text-align: center;
-  padding: 5px;
-  line-height: 30px;
 }
 .backpack-wrapper .backpack-table-wrapper {
   overflow: auto;

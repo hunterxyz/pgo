@@ -118,8 +118,7 @@ var startCountdown = function (etaSeconds) {
     $('.walking-data').addClass('visible');
     $('.distance-so-far').text(0);
     $('.eta').data('timer', etaSeconds).TimeCircles({
-        count_past_zero: false,
-        time:            {
+        time: {
             Days:    {
                 text:  'Days',
                 color: '#FFCC66',
@@ -142,8 +141,9 @@ var startCountdown = function (etaSeconds) {
             }
         }
     }).addListener(function (unit, value, total) {
-        if (total <= 0) {
+        if (total < 0) {
             $('.walking-data').removeClass('visible');
+            $('.eta').TimeCircles().stop();
         }
     });
 
@@ -156,6 +156,9 @@ var afterLogin = function (result) {
     loginMenuListener.remove();
     $('.right-click-menu').hide();
     updatePlayerStatus(result);
+
+    $('.pokemon-tabs').tabs();
+
     playerMarker.setPosition(coords);
     playerMarker.setMap(map);
 
@@ -187,7 +190,6 @@ var afterLogin = function (result) {
 
             startCountdown(result.time);
             $('.total-distance').text((result.distance / 1000).toFixed(3));
-            console.log(result.time + ' seconds');
 
         }).fail(function () {
             alert('no data');
@@ -269,6 +271,7 @@ var afterLogout = function () {
     moveCircles(marker.getPosition());
     rightClickListener.remove();
     initMapMouseInterations();
+    $('.walking-data').removeClass('visible');
 
 };
 
@@ -381,75 +384,6 @@ var findCandies = function (pokemon, result) {
 
 };
 
-var resetTransferButton = function (pokemon) {
-
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
-    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
-
-    pokemonDetails.find('.transfer-button').off('click');
-    pokemonDetails.find('.transfer-button').on('click', function () {
-
-        $.ajax({
-            method:      'POST',
-            url:         '/player/transfer',
-            data:        JSON.stringify({id: pokemon.id}),
-            contentType: 'application/json',
-            dataType:    'json'
-        }).success(function (result) {
-
-            pokemonDetailsWrapper.find('.close').click();
-            updatePokemonList(result);
-
-        }).fail(function () {
-            alert('no data');
-        });
-
-    });
-
-};
-
-var openDetails = function (pokemon, result) {
-
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
-
-    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
-
-    pokemonDetails.find('img.pokemon-picture').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
-    pokemonDetails.find('.points').text(pokemon.cp);
-    var pokemonFamilyCandies = findCandies(pokemon, result);
-    pokemonDetails.find('.total-candies').text(pokemonFamilyCandies.candies);
-    pokemonDetails.find('.candy-family').text(pokemonFamilyCandies.name);
-    pokemonDetails.find('.total-stardust').text(result.playerObject.currencies[1].amount);
-
-    resetTransferButton(pokemon);
-
-    pokemonDetailsWrapper.addClass('open');
-
-};
-
-var createPokemonListThumbnail = function (result) {
-
-    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
-    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
-
-    _.each(pokemonsList, function (pokemon) {
-
-        var pokemonTemplate = $('.templates .pokemon').clone();
-
-        pokemonTemplate.find('.cp .points').text(pokemon.cp);
-
-        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
-
-        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
-        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
-        pokemonTemplate.find('.name').text(pokemon.name);
-        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon, result));
-
-        $pokemonsContainer.append(pokemonTemplate);
-
-    });
-};
-
 var updateItems = function (result) {
     var $item;
     var razzBerryWasSelected = $('.backpack .item.berry input[type=checkbox]:checked').length;
@@ -540,15 +474,8 @@ var updateItems = function (result) {
 
 var updatePokemonList = function (result) {
 
-    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
-    $pokemonsContainer.html('');
-
-    var $counter = $('.pokemons-wrapper .count');
-
-    $counter.find('.count').text(result.inventory.pokemons.length);
-    $counter.find('.total').text(result.playerObject.max_pokemon_storage);
-
-    createPokemonListThumbnail(result);
+    createPokemonListThumbnails(result);
+    createEggListThumbnails(result);
 };
 
 var updatePlayerStatus = function (result) {
@@ -577,6 +504,108 @@ var updatePlayerStatus = function (result) {
     updateItems(result);
     updatePokemonList(result);
 
+};
+
+var resetTransferButton = function (pokemon) {
+
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
+
+    pokemonDetails.find('.transfer-button').off('click');
+    pokemonDetails.find('.transfer-button').on('click', function () {
+
+        $.ajax({
+            method:      'POST',
+            url:         '/player/transfer',
+            data:        JSON.stringify({id: pokemon.id}),
+            contentType: 'application/json',
+            dataType:    'json'
+        }).success(function (result) {
+
+            pokemonDetailsWrapper.find('.close').click();
+            updatePokemonList(result);
+
+        }).fail(function () {
+            alert('no data');
+        });
+
+    });
+
+};
+
+var openDetails = function (pokemon, result) {
+
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+
+    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
+
+    pokemonDetails.find('img.pokemon-picture').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+    pokemonDetails.find('.points').text(pokemon.cp);
+    var pokemonFamilyCandies = findCandies(pokemon, result);
+    pokemonDetails.find('.total-candies').text(pokemonFamilyCandies.candies);
+    pokemonDetails.find('.candy-family').text(pokemonFamilyCandies.name);
+    pokemonDetails.find('.total-stardust').text(result.playerObject.currencies[1].amount);
+
+    resetTransferButton(pokemon);
+
+    pokemonDetailsWrapper.addClass('open');
+
+};
+
+var createPokemonListThumbnails = function (result) {
+
+    var $counter = $('.pokemons-wrapper .pokemons-tab-link .counter');
+
+    $counter.find('.count').text(result.inventory.pokemons.length + result.inventory.eggs.length);
+    $counter.find('.total').text(result.playerObject.max_pokemon_storage);
+
+    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
+    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
+    $pokemonsContainer.html('');
+
+    _.each(pokemonsList, function (pokemon) {
+
+        var pokemonTemplate = $('.templates .pokemon').clone();
+
+        pokemonTemplate.find('.cp .points').text(pokemon.cp);
+
+        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+
+        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
+        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
+        pokemonTemplate.find('.name').text(pokemon.name);
+        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon, result));
+
+        $pokemonsContainer.append(pokemonTemplate);
+
+    });
+};
+
+var createEggListThumbnails = function (result) {
+
+    var $counter = $('.pokemons-wrapper .eggs-tab-link .counter');
+
+    $counter.find('.count').text(result.inventory.eggs.length);
+
+    var $eggsContainer = $('.pokemons-wrapper .eggs');
+    $eggsContainer.html('');
+
+    _.each(result.inventory.eggs, function (egg) {
+
+        var eggTemplate = $('.templates .egg').clone();
+
+        eggTemplate.find('.walked').text(Number(egg.egg_km_walked_start).toFixed(1));
+        eggTemplate.find('.target').text(Number(egg.egg_km_walked_target).toFixed(1));
+
+        if (egg.egg_incubator_id) {
+            eggTemplate.find('img').prop('src', '/assets/images/items/incubatorBasicUnlimited.png');
+        } else {
+            eggTemplate.find('img').prop('src', '/assets/images/pokemon-egg.png');
+        }
+
+        $eggsContainer.append(eggTemplate);
+
+    });
 };
 
 var limitMarkers = function (markers, limit) {
@@ -938,6 +967,12 @@ socket.on('connect', function () {
 
     });
 
+    socket.on('hatchedEgg', function (response) {
+
+        console.log(response);
+
+    });
+
     socket.on('populateMap', function (objects) {
 
         populateMap(objects);
@@ -1021,7 +1056,7 @@ var initBotMarker = function () {
     });
 };
 
-var initdestinationPointMarker = function () {
+var initDestinationPointMarker = function () {
     destinationPoint = new google.maps.Marker({
         position: latLng,
         icon:     {
@@ -1093,7 +1128,7 @@ $(document).ready(function () {
     botLogin();
 
     initPlayerMarker();
-    initdestinationPointMarker();
+    initDestinationPointMarker();
 
     $.ajax({
         method:      'GET',
