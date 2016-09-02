@@ -16,6 +16,7 @@ var destinationPoint;
 
 var loginMenuListener;
 var loginCoords;
+var rightClickListener;
 
 var socket = io.connect('http://localhost:5050');
 
@@ -158,7 +159,7 @@ var afterLogin = function (result) {
     playerMarker.setPosition(coords);
     playerMarker.setMap(map);
 
-    map.addListener('rightclick', function (e) {
+    rightClickListener = map.addListener('rightclick', function (e) {
 
         var data = e.latLng.toJSON();
 
@@ -265,7 +266,8 @@ var afterLogout = function () {
 
     clearCoordinates();
     playerMarker.setMap(null);
-    moveCircles(marker.getLoctation());
+    moveCircles(marker.getPosition());
+    rightClickListener.remove();
     initMapMouseInterations();
 
 };

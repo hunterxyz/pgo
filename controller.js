@@ -303,7 +303,7 @@ Controller.prototype.logoutRoute = function (req, res) {
 
     this.stopMapScanner('externalPlayer');
     clearInterval(this.walkingInterval);
-
+    this.externalPlayer = null;
     res.send({});
 
 };
