@@ -15,6 +15,7 @@ var interactionCircle;
 var destinationPoint;
 
 var loginMenuListener;
+var loginCoords;
 
 var socket = io.connect('http://localhost:5050');
 
@@ -60,9 +61,19 @@ var levels = [
     5000000
 ];
 
-var sendStopWalking = function () {
+var clearCoordinates = function () {
 
-    socket.emit('stopWalking');
+    for (var i = 0; i < coordinateMarkers.length; i++) {
+
+        var marker = coordinateMarkers[i];
+
+        marker.setMap(null);
+
+    }
+
+    destinationPoint.setMap(null);
+
+    coordinateMarkers = [];
 
 };
 
@@ -90,6 +101,198 @@ var moveCircles = function (latLng) {
 
 };
 
+var moveBotMarkerTo = function (e) {
+
+    var latLng = e.latLng;
+
+    socket.emit('moveTo', latLng.toJSON());
+    marker.setPosition(latLng);
+    moveCircles(latLng);
+
+};
+
+var startCountdown = function (etaSeconds) {
+
+    $('.eta').TimeCircles().destroy();
+    $('.walking-data').addClass('visible');
+    $('.distance-so-far').text(0);
+    $('.eta').data('timer', etaSeconds).TimeCircles({
+        count_past_zero: false,
+        time:            {
+            Days:    {
+                text:  'Days',
+                color: '#FFCC66',
+                show:  false
+            },
+            Hours:   {
+                text:  'Hours',
+                color: '#99CCFF',
+                show:  true
+            },
+            Minutes: {
+                text:  'Minutes',
+                color: '#BBFFBB',
+                show:  true
+            },
+            Seconds: {
+                text:  'Seconds',
+                color: '#FF9999',
+                show:  true
+            }
+        }
+    }).addListener(function (unit, value, total) {
+        if (total <= 0) {
+            $('.walking-data').removeClass('visible');
+        }
+    });
+
+};
+
+var afterLogin = function (result) {
+
+    var coords = result.location;
+
+    loginMenuListener.remove();
+    $('.right-click-menu').hide();
+    updatePlayerStatus(result);
+    playerMarker.setPosition(coords);
+    playerMarker.setMap(map);
+
+    map.addListener('rightclick', function (e) {
+
+        var data = e.latLng.toJSON();
+
+        clearCoordinates();
+
+        var startPosition = playerMarker.getPosition().toJSON();
+
+        drawCoordinates(startPosition);
+        playerMarker.setPosition(startPosition);
+        moveCircles(startPosition);
+
+        destinationPoint.setPosition(e.latLng);
+        destinationPoint.setMap(map);
+
+        data.kmh = Number($('select[name=speed]').val());
+        data.stepFrequency = Number($('select[name=freq]').val());
+
+        $.ajax({
+            method:      'POST',
+            url:         'walktoPoint',
+            data:        JSON.stringify(data),
+            contentType: 'application/json',
+            dataType:    'json'
+        }).success(function (result) {
+
+            startCountdown(result.time);
+            $('.total-distance').text((result.distance / 1000).toFixed(3));
+            console.log(result.time + ' seconds');
+
+        }).fail(function () {
+            alert('no data');
+        });
+
+    });
+};
+
+var login = function () {
+
+    var data = loginCoords;
+
+    data.username = $('[name=username]').val();
+    data.password = $('[name=password]').val();
+    data.provider = $('[name=provider]').val();
+
+    $.ajax({
+        method:      'POST',
+        url:         '/player/login',
+        data:        JSON.stringify(data),
+        contentType: 'application/json',
+        dataType:    'json'
+    }).success(function (result) {
+
+        afterLogin(result);
+
+    }).fail(function () {
+        alert('no data');
+    });
+
+};
+
+var initMapMouseInterations = function () {
+
+    var scanMapLatLngListener = map.addListener('click', $.proxy(moveBotMarkerTo, this));
+
+    var $loginHere = $('.right-click-menu ul.login-here');
+
+    loginMenuListener = map.addListener('rightclick', function (e) {
+
+        var rightClickMenu = $('.right-click-menu');
+
+        rightClickMenu.css({
+            top:  e.pixel.y,
+            left: e.pixel.x
+        }).show();
+
+        loginCoords = e.latLng.toJSON();
+
+        scanMapLatLngListener.remove();
+
+        var closeMenuListener = map.addListener('click', function () {
+
+            $('.login-form').hide();
+            rightClickMenu.hide();
+            $loginHere.show();
+
+            closeMenuListener.remove();
+            scanMapLatLngListener = map.addListener('click', $.proxy(moveBotMarkerTo, this));
+
+        });
+
+        $('.go').on('click', $.proxy(login, this));
+
+    });
+
+    $loginHere.find('li').on('click', function () {
+        $loginHere.hide();
+        $('.login-form').show();
+
+    });
+
+};
+
+var afterLogout = function () {
+
+    clearCoordinates();
+    playerMarker.setMap(null);
+    moveCircles(marker.getLoctation());
+    initMapMouseInterations();
+
+};
+
+var logout = function () {
+
+    $.ajax({
+        method:      'POST',
+        url:         '/player/logout',
+        contentType: 'application/json',
+        dataType:    'json'
+    }).success(function (result) {
+
+        afterLogout(result);
+
+    }).fail(function () {
+        alert('no data');
+    });
+
+};
+
+var sendStopWalking = function () {
+
+    socket.emit('stopWalking');
+
+};
+
 var ms2time = function msToTime(duration) {
 
     var isNegative = false;
@@ -109,22 +312,6 @@ var ms2time = function msToTime(duration) {
     }
 
     return minutes + ':' + seconds;
-
-};
-
-var clearCoordinates = function () {
-
-    for (var i = 0; i < coordinateMarkers.length; i++) {
-
-        var marker = coordinateMarkers[i];
-
-        marker.setMap(null);
-
-    }
-
-    destinationPoint.setMap(null);
-
-    coordinateMarkers = [];
 
 };
 
@@ -164,6 +351,101 @@ var handleMarkerTimer = function (marker, pokeMarkers) {
 
     marker.setTitle(ms2time(this.time_till_hidden_ms));
 
+};
+
+var findFamily = function (pokemon, pokedex) {
+
+    if (pokemon.prev_evolution) {
+
+        return findFamily(_.find(pokedex, {num: pokemon.prev_evolution[0].num}), pokedex);
+
+    } else {
+
+        return pokemon;
+
+    }
+
+};
+
+var findCandies = function (pokemon, result) {
+
+    var familyPokemon = findFamily(pokemon, result.pokedex.pokemon);
+
+    var candy = _.find(result.inventory.candies, function (candy) {
+        return candy.family_id === Number(familyPokemon.num);
+    });
+
+    return {candies: candy.candy, name: familyPokemon.name};
+
+};
+
+var resetTransferButton = function (pokemon) {
+
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
+
+    pokemonDetails.find('.transfer-button').off('click');
+    pokemonDetails.find('.transfer-button').on('click', function () {
+
+        $.ajax({
+            method:      'POST',
+            url:         '/player/transfer',
+            data:        JSON.stringify({id: pokemon.id}),
+            contentType: 'application/json',
+            dataType:    'json'
+        }).success(function (result) {
+
+            pokemonDetailsWrapper.find('.close').click();
+            updatePokemonList(result);
+
+        }).fail(function () {
+            alert('no data');
+        });
+
+    });
+
+};
+
+var openDetails = function (pokemon, result) {
+
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+
+    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
+
+    pokemonDetails.find('img.pokemon-picture').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+    pokemonDetails.find('.points').text(pokemon.cp);
+    var pokemonFamilyCandies = findCandies(pokemon, result);
+    pokemonDetails.find('.total-candies').text(pokemonFamilyCandies.candies);
+    pokemonDetails.find('.candy-family').text(pokemonFamilyCandies.name);
+    pokemonDetails.find('.total-stardust').text(result.playerObject.currencies[1].amount);
+
+    resetTransferButton(pokemon);
+
+    pokemonDetailsWrapper.addClass('open');
+
+};
+
+var createPokemonListThumbnail = function (result) {
+
+    var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
+    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
+
+    _.each(pokemonsList, function (pokemon) {
+
+        var pokemonTemplate = $('.templates .pokemon').clone();
+
+        pokemonTemplate.find('.cp .points').text(pokemon.cp);
+
+        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+
+        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
+        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
+        pokemonTemplate.find('.name').text(pokemon.name);
+        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon, result));
+
+        $pokemonsContainer.append(pokemonTemplate);
+
+    });
 };
 
 var updateItems = function (result) {
@@ -254,96 +536,19 @@ var updateItems = function (result) {
     });
 };
 
-var findFamily = function (pokemon, pokedex) {
-
-    if (pokemon.prev_evolution) {
-
-        return findFamily(_.find(pokedex, {num: pokemon.prev_evolution[0].num}), pokedex);
-
-    } else {
-
-        return pokemon;
-
-    }
-
-};
-
-var findCandies = function (pokemon, result) {
-
-    var familyPokemon = findFamily(pokemon, result.pokedex.pokemon);
-
-    var candy = _.find(result.inventory.candies, function (candy) {
-        return candy.family_id === Number(familyPokemon.num);
-    });
-
-    return {candies: candy.candy, name: familyPokemon.name};
-
-};
-
-var openDetails = function (pokemon, result) {
-
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
-
-    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
-
-    pokemonDetails.find('img.pokemon-picture').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
-    pokemonDetails.find('.points').text(pokemon.cp);
-    var pokemonFamilyCandies = findCandies(pokemon, result);
-    pokemonDetails.find('.total-candies').text(pokemonFamilyCandies.candies);
-    pokemonDetails.find('.candy-family').text(pokemonFamilyCandies.name);
-    pokemonDetails.find('.total-stardust').text(result.playerObject.currencies[1].amount);
-    pokemonDetails.find('.transfer-button').off('click');
-    pokemonDetails.find('.transfer-button').on('click', function () {
-
-        $.ajax({
-            method:      'POST',
-            url:         '/player/transfer',
-            data:        JSON.stringify({id: pokemon.id}),
-            contentType: 'application/json',
-            dataType:    'json'
-        }).success(function (result) {
-
-            pokemonDetailsWrapper.find('.close').click();
-            updatePokemonList(result);
-
-        }).fail(function () {
-            alert('no data');
-        });
-
-    });
-
-    pokemonDetailsWrapper.addClass('open');
-
-};
-
 var updatePokemonList = function (result) {
+
     var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
     $pokemonsContainer.html('');
-
-    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
 
     var $counter = $('.pokemons-wrapper .count');
 
     $counter.find('.count').text(result.inventory.pokemons.length);
     $counter.find('.total').text(result.playerObject.max_pokemon_storage);
 
-    _.each(pokemonsList, function (pokemon) {
-
-        var pokemonTemplate = $('.templates .pokemon').clone();
-
-        pokemonTemplate.find('.cp .points').text(pokemon.cp);
-
-        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
-
-        var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
-        pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
-        pokemonTemplate.find('.name').text(pokemon.name);
-        pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon, result));
-
-        $pokemonsContainer.append(pokemonTemplate);
-
-    });
+    createPokemonListThumbnail(result);
 };
+
 var updatePlayerStatus = function (result) {
 
     $('.player-status .level').text(result.player.level);
@@ -712,6 +917,12 @@ var populateMap = function (objects) {
 
 };
 
+var updateOdometer = function (km) {
+
+    $('.distance-so-far').text((km / 1000).toFixed(3));
+
+};
+
 socket.on('connect', function () {
 
     sendStopWalking();
@@ -721,6 +932,7 @@ socket.on('connect', function () {
         drawCoordinates(response);
         playerMarker.setPosition(response);
         moveCircles(response);
+        updateOdometer(response.kmsSoFar);
 
     });
 
@@ -731,89 +943,6 @@ socket.on('connect', function () {
     });
 
 });
-
-var startCoutdown = function (etaSeconds) {
-
-    $('.eta').TimeCircles().destroy();
-    $('.eta').addClass('visible');
-    $('.eta').data('timer', etaSeconds).TimeCircles({
-        count_past_zero: false,
-        time:            {
-            Days:    {
-                text:  'Days',
-                color: '#FFCC66',
-                show:  false
-            },
-            Hours:   {
-                text:  'Hours',
-                color: '#99CCFF',
-                show:  true
-            },
-            Minutes: {
-                text:  'Minutes',
-                color: '#BBFFBB',
-                show:  true
-            },
-            Seconds: {
-                text:  'Seconds',
-                color: '#FF9999',
-                show:  true
-            }
-        }
-    }).addListener(function (unit, value, total) {
-        if (total <= 0) {
-            $(this).removeClass('visible');
-        }
-    });
-
-};
-
-function afterLogin(result) {
-
-    var coords = result.location;
-
-    loginMenuListener.remove();
-    $('.right-click-menu').hide();
-    updatePlayerStatus(result);
-    playerMarker.setPosition(coords);
-    playerMarker.setMap(map);
-
-    map.addListener('rightclick', function (e) {
-
-        var data = e.latLng.toJSON();
-
-        clearCoordinates();
-
-        var startPosition = playerMarker.getPosition().toJSON();
-
-        drawCoordinates(startPosition);
-        playerMarker.setPosition(startPosition);
-        moveCircles(startPosition);
-
-        destinationPoint.setPosition(e.latLng);
-        destinationPoint.setMap(map);
-
-        data.kmh = Number($('select[name=speed]').val());
-        data.stepFrequency = Number($('select[name=freq]').val());
-
-        $.ajax({
-            method:      'POST',
-            url:         'walktoPoint',
-            data:        JSON.stringify(data),
-            contentType: 'application/json',
-            dataType:    'json'
-        }).success(function (result) {
-
-            startCoutdown(result.time);
-            console.log(result.distance + ' meters');
-            console.log(result.time + ' seconds');
-
-        }).fail(function () {
-            alert('no data');
-        });
-
-    });
-}
 
 var initMap = function () {
     map = new google.maps.Map($('.map-placeholder')[0], {
@@ -901,82 +1030,6 @@ var initdestinationPointMarker = function () {
     });
 };
 
-var moveBotMarkerTo = function (e) {
-
-    var latLng = e.latLng;
-
-    socket.emit('moveTo', latLng.toJSON());
-    marker.setPosition(latLng);
-    moveCircles(latLng);
-
-};
-
-var login = function login(loginCoords) {
-
-    var data = loginCoords;
-
-    data.username = $('[name=username]').val();
-    data.password = $('[name=password]').val();
-    data.provider = $('[name=provider]').val();
-
-    $.ajax({
-        method:      'POST',
-        url:         '/player/login',
-        data:        JSON.stringify(data),
-        contentType: 'application/json',
-        dataType:    'json'
-    }).success(function (result) {
-
-        afterLogin(result);
-
-    }).fail(function () {
-        alert('no data');
-    });
-
-};
-
-var initPlayerLoginForm = function (loginCoords) {
-
-    var scanMapLatLngListener = map.addListener('click', $.proxy(moveBotMarkerTo, this));
-
-    var $loginHere = $('.right-click-menu ul.login-here');
-
-    loginMenuListener = map.addListener('rightclick', function (e) {
-
-        var rightClickMenu = $('.right-click-menu');
-
-        rightClickMenu.css({
-            top:  e.pixel.y,
-            left: e.pixel.x
-        }).show();
-
-        loginCoords = e.latLng.toJSON();
-
-        scanMapLatLngListener.remove();
-
-        var closeMenuListener = map.addListener('click', function () {
-
-            $('.login-form').hide();
-            rightClickMenu.hide();
-            $loginHere.show();
-
-            closeMenuListener.remove();
-            scanMapLatLngListener = map.addListener('click', $.proxy(moveBotMarkerTo, this));
-
-        });
-
-        $('.go').on('click', $.proxy(login, this, loginCoords));
-
-    });
-
-    $loginHere.find('li').on('click', function () {
-        $loginHere.hide();
-        $('.login-form').show();
-
-    });
-
-};
-
 var initBackpack = function () {
     var $backpackButton = $('.backpack-button');
     var $backpack = $('.backpack-wrapper');
@@ -1009,8 +1062,6 @@ var initPokemonList = function () {
 };
 
 $(document).ready(function () {
-
-    var loginCoords;
 
     $('.nearby-wrapper .bot-timer').TimeCircles({
         start:           false,
@@ -1055,8 +1106,9 @@ $(document).ready(function () {
 
     });
 
-    initPlayerLoginForm(loginCoords);
+    initMapMouseInterations();
     initBackpack();
     initPokemonList();
+    $('.logout').on('click', logout);
 
 });

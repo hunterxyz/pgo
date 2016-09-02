@@ -32,8 +32,8 @@ router.init = function (app) {
 
         app.post('/walkToPoint', wrapController(controller.walkToPoint));
         app.post('/moveto', wrapController(controller.moveTo));
-        app.post('/player/login', wrapController(controller.playerLogin));
-        app.post('/player/logout', wrapController(controller.playerLogout));
+        app.post('/player/login', wrapController(controller.loginRoute));
+        app.post('/player/logout', wrapController(controller.logoutRoute));
         app.post('/player/lootpokestop', wrapController(controller.lootPokestop));
         app.post('/player/catchpokemon', wrapController(controller.catchPokemon));
         app.post('/player/recycle', wrapController(controller.recycleRoute));

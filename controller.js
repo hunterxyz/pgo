@@ -13,18 +13,9 @@ if (Number.prototype.toDegrees === undefined) {
     };
 }
 
-//function waitMs(time) {
-//    return new Promise((resolve) => { // dont use reject
-//        setTimeout(()=> {
-//            resolve();
-//        }, time);
-//    });
-//}
-
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
-//var XDate = require('xdate');
 var pokedex = require('pokemon-go-pokedex');
 var PokemonGo = require('pokemongo-api').default;
 
@@ -273,9 +264,9 @@ Controller.prototype.transferRoute = Q.async(function*(req, res) {
 
 });
 
-Controller.prototype.evolveRoute = Q.async(function*(req, res) {
-    yield;
-});
+// Controller.prototype.evolveRoute = Q.async(function*(req, res) {
+//     yield;
+// });
 
 //Controller.prototype.checkHatchedEggsRoute = Q.async(function*(req, res) {
 //
@@ -287,7 +278,7 @@ Controller.prototype.evolveRoute = Q.async(function*(req, res) {
 //
 //});
 
-Controller.prototype.playerLogin = Q.async(function*(req, res) {
+Controller.prototype.loginRoute = Q.async(function*(req, res) {
 
     var lat = req.body.lat;
     var lng = req.body.lng;
@@ -304,13 +295,14 @@ Controller.prototype.playerLogin = Q.async(function*(req, res) {
 
 });
 
-Controller.prototype.playerLogout = function (req, res) {
+Controller.prototype.logoutRoute = function (req, res) {
 
     this.playerUsername = null;
     this.playerPassword = null;
     this.playerProvider = null;
 
     this.stopMapScanner('externalPlayer');
+    clearInterval(this.walkingInterval);
 
     res.send({});
 
@@ -436,6 +428,10 @@ Controller.prototype.walkToPoint = function (req, res) {
             latitude:  newCoordinates.lat,
             longitude: newCoordinates.lng
         };
+
+        var walkingData = newCoordinates;
+
+        walkingData.kmsSoFar = nexStepDistance;
 
         self.socket.emit('walkedTo', newCoordinates);
 
