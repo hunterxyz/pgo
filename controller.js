@@ -17,62 +17,62 @@ require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
 var pokedex = require('pokemon-go-pokedex');
-var PokemonGo = require('pokemongo-api').default;
+var PokemonGo = require('pokemon-go-node-api');
 
-PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
-
-    return yield this.Call([
-        {
-            request: 'RECYCLE_INVENTORY_ITEM',
-            message: {
-                item_id, count
-            }
-        }
-    ]);
-
-});
-
-PokemonGo.prototype.useIncubator = Q.async(function*(item_id, pokemon_id) {
-
-    return yield this.Call([
-        {
-            request: 'USE_ITEM_EGG_INCUBATOR',
-            message: {
-                item_id:    String(item_id),
-                pokemon_id: pokemon_id
-            }
-        }]);
-
-});
-
-PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
-
-    return yield this.Call([
-        {
-            request: 'USE_ITEM_CAPTURE',
-            message: {
-                item_id:        itemId,
-                encounter_id:   pokemon.encounter_id,
-                spawn_point_id: pokemon.spawn_point_id
-            }
-        }
-    ]);
-
-});
-
-
-PokemonGo.prototype.levelUp = Q.async(function*(level) {
-
-    return yield this.Call([
-        {
-            request: 'LEVEL_UP_REWARDS',
-            message: {
-                level: level
-            }
-        }
-    ]);
-
-});
+//PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
+//
+//    return yield this.Call([
+//        {
+//            request: 'RECYCLE_INVENTORY_ITEM',
+//            message: {
+//                item_id, count
+//            }
+//        }
+//    ]);
+//
+//});
+//
+//PokemonGo.prototype.useIncubator = Q.async(function*(item_id, pokemon_id) {
+//
+//    return yield this.Call([
+//        {
+//            request: 'USE_ITEM_EGG_INCUBATOR',
+//            message: {
+//                item_id:    String(item_id),
+//                pokemon_id: pokemon_id
+//            }
+//        }]);
+//
+//});
+//
+//PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
+//
+//    return yield this.Call([
+//        {
+//            request: 'USE_ITEM_CAPTURE',
+//            message: {
+//                item_id:        itemId,
+//                encounter_id:   pokemon.encounter_id,
+//                spawn_point_id: pokemon.spawn_point_id
+//            }
+//        }
+//    ]);
+//
+//});
+//
+//
+//PokemonGo.prototype.levelUp = Q.async(function*(level) {
+//
+//    return yield this.Call([
+//        {
+//            request: 'LEVEL_UP_REWARDS',
+//            message: {
+//                level: level
+//            }
+//        }
+//    ]);
+//
+//});
 
 var geoHelper = require('./utils/GeoHelper');
 
@@ -86,10 +86,10 @@ var parseMapResponse = function (objects, user, coordinates) {
 
     return {
         coordinates: coordinates,
-        catchable:   objects.wild_pokemons,
+        catchable:   objects.wildPokemons,
         forts:       objects.forts,
-        nearby:      objects.nearby_pokemons,
-        spawn:       objects.spawn_points,
+        nearby:      objects.nearbyPokemons,
+        spawn:       objects.spawnPoints,
         showAll:     user === 'pokemonGo'
     };
 };
@@ -220,27 +220,47 @@ Controller.prototype.startMapScanner = function (user) {
 
         var currentUser = self[currentUserString];
 
-        currentUser.GetMapObjects().then(function (objects) {
+        currentUser.Heartbeat(function (error, objects) {
 
-            if (objects.forts && objects.forts.checkpoints.length) {
+            var mapObjects = {
+                nearbyPokemons: [],
+                wildPokemons:   [],
+                forts:          [],
+                spawnPoints:    []
+            };
 
-                self[user + 'MapObjects'] = objects;
+            _.each(objects.cells, function (cell) {
 
-                var playerCoordinates = {
-                    lat: currentUser.player.location.latitude,
-                    lng: currentUser.player.location.longitude
-                };
+                mapObjects.nearbyPokemons = _.concat(mapObjects.nearbyPokemons, cell.NearbyPokemon);
+                mapObjects.wildPokemons = _.concat(mapObjects.wildPokemons, cell.WildPokemon);
+                mapObjects.forts = _.concat(mapObjects.forts, cell.Fort);
+                mapObjects.spawnPoints = _.concat(mapObjects.spawnPoints, cell.SpawnPoint);
 
-                self.socket.emit('populateMap', parseMapResponse(objects, user, playerCoordinates));
+            });
 
-            }
-        }).catch(function (result) {
+            //console.log(mapObjects);
 
-            if (result.message === 'Illegal buffer') {
+            /*
+             return {
+             coordinates: coordinates,
+             catchable:   objects.wild_pokemons,
+             forts:       objects.forts,
+             nearby:      objects.nearby_pokemons,
+             spawn:       objects.spawn_points,
+             showAll:     user === 'pokemonGo'
+             };
+             */
 
-                self.login(currentUser.player.location.latitude, currentUser.player.location.longitude, user || 'pokemonGo', true);
 
-            }
+            self[user + 'MapObjects'] = objects;
+
+            var coords = currentUser.GetLocationCoords();
+
+            self.socket.emit('populateMap', parseMapResponse(mapObjects, user, {
+                lat: coords.latitude,
+                lng: coords.longitude,
+                alt: coords.altitude
+            }));
 
         });
 
@@ -258,22 +278,27 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
 
     var currentUserString = user || 'pokemonGo';
 
-    this[currentUserString] = new PokemonGo();
+    this[currentUserString] = new PokemonGo.Pokeio();
 
     var currentUser = this[currentUserString];
 
-    currentUser.player.location = {
-        latitude:  parseFloat(lat),
-        longitude: parseFloat(lng)
+    var location = {
+        type:   'coords',
+        coords: {
+            latitude:  parseFloat(lat),
+            longitude: parseFloat(lng),
+            altitude:  0
+        }
+
     };
 
     var _username = currentUserString !== 'pokemonGo' ? this.playerUsername : botUsername;
     var _password = currentUserString !== 'pokemonGo' ? this.playerPassword : botPassword;
     var _provider = currentUserString !== 'pokemonGo' ? this.playerProvider : botProvider;
 
-    var playerInfo = yield currentUser.login(_username, _password, _provider);
+    var playerInfo = yield Q.nfcall(currentUser.init, _username, _password, location, _provider);
 
-    currentUser.playerObject = yield currentUser.GetPlayer();
+    currentUser.playerObject = yield  Q.nfcall(currentUser.GetProfile);
     currentUser.pokedex = pokedex;
     currentUser.logged = true;
 

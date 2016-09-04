@@ -720,8 +720,8 @@ var clickOnPokemon = function () {
 
     var data = {
         location:     {
-            lat: this.pokemon.latitude,
-            lng: this.pokemon.longitude
+            lat: this.pokemon.Latitude,
+            lng: this.pokemon.Longitude
         },
         ball:         $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
         useRazzBerry: $('.backpack .item.berry input[type=checkbox]:checked').length
@@ -775,11 +775,11 @@ var createPokeMarkers = function (map, markers) {
     for (var j = 0; j < markers.length; j++) {
 
         var pokemon = markers[j];
-        var title = ms2time(pokemon.time_till_hidden_ms);
+        var title = ms2time(pokemon.TimeTillHiddenMs);
 
         var pokemonOnMap = isPokemonOnMap(pokemon);
 
-        if (pokemonOnMap && pokemonOnMap.pokemon.time_till_hidden_ms < 0) {
+        if (pokemonOnMap && pokemonOnMap.pokemon.TimeTillHiddenMs < 0) {
             pokemonOnMap.setMap(null);
             _.remove(pokeMarkers, pokemonOnMap);
             pokemonOnMap = null;
@@ -789,8 +789,16 @@ var createPokeMarkers = function (map, markers) {
             continue;
         }
 
+        var pokemonNum = pokemon.pokemon.PokemonId;
+
+        if (pokemonNum < 10) {
+            pokemonNum = '00' + pokemonNum;
+        } else if (pokemonNum < 100) {
+            pokemonNum = '0' + pokemonNum;
+        }
+
         var image = {
-            url:        '/assets/images/pokemons/' + pokemon.num + '.png',
+            url:        '/assets/images/pokemons/' + pokemonNum + '.png',
             size:       new google.maps.Size(120, 120),
             origin:     new google.maps.Point(0, 0),
             anchor:     new google.maps.Point(20, 20),
@@ -798,7 +806,7 @@ var createPokeMarkers = function (map, markers) {
         };
 
         var marker = new google.maps.Marker({
-            position: {lat: pokemon.latitude, lng: pokemon.longitude},
+            position: {lat: pokemon.Latitude, lng: pokemon.Longitude},
             map:      map,
             icon:     image,
             pokemon:  pokemon,
@@ -831,7 +839,7 @@ var createSpawnMarker = function (map, spawnPoint) {
     };
 
     var marker = new google.maps.Marker({
-        position:   {lat: spawnPoint.latitude, lng: spawnPoint.longitude},
+        position:   {lat: spawnPoint.Latitude, lng: spawnPoint.Longitude},
         map:        map,
         icon:       image,
         clickable:  false,
@@ -857,7 +865,7 @@ var createSpawnMarkers = function (map, markers) {
 
         if (!_.some(spawnMarkers, function (spawnMarker) {
 
-                var samePosition = spawnMarker.spawnPoint.latitude === markers.latitude && spawnMarker.spawnPoint.longitude === markers.longitude;
+                var samePosition = spawnMarker.spawnPoint.Latitude === markers.Latitude && spawnMarker.spawnPoint.Longitude === markers.Longitude;
 
                 return samePosition;
 
@@ -949,7 +957,7 @@ var createPokestopMarker = function (map, pokestop) {
     };
 
     var marker = new google.maps.Marker({
-        position:  {lat: pokestop.latitude, lng: pokestop.longitude},
+        position:  {lat: pokestop.Latitude, lng: pokestop.Longitude},
         map:       map,
         icon:      image,
         clickable: true,
