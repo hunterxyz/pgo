@@ -62,6 +62,39 @@ var levels = [
     5000000
 ];
 
+var itemsMap = {
+    0:'unknown',
+    1:'pokeBall',
+    2:'greatBall',
+    3:'ultraBall',
+    4:'masterBall',
+    101:'potion',
+    102:'superPotion',
+    103:'hyperPotion',
+    104:'maxPotion',
+    201:'revive',
+    202:'maxRevive',
+    301:'luckyEgg',
+    401:'incenseOrdinary',
+    402:'incenseSpicy',
+    403:'incenseCool',
+    404:'incenseFloral',
+    501:'troyDisk',
+    602:'xAttack',
+    603:'xDefense',
+    604:'xMiracle',
+    701:'razzBerry',
+    702:'blukBerry',
+    703:'nanabBerry',
+    704:'weparBerry',
+    705:'pinapBerry',
+    801:'specialCamera',
+    901:'incubatorBasicUnlimited',
+    902:'incubatorBasic',
+    1001:'pokemonStorageUpgrade',
+    1002:'itemStorageUpgrade'
+};
+
 var clearCoordinates = function () {
 
     for (var i = 0; i < coordinateMarkers.length; i++) {
@@ -415,24 +448,24 @@ var updateItems = function (result) {
 
             $item = $itemrow.clone();
 
-            $item.find('img').attr('src', '/assets/images/items/' + k + '.png');
+            $item.find('img').attr('src', '/assets/images/items/' + itemsMap[item.item_id] + '.png');
             $item.find('.item-count').text(item.count);
 
             var itemSelection = $item.find('.item-selection');
             var input = $('<input type="checkbox" class="item-selection"/>');
             var $itemRecycleButton = $item.find('.item-recycle button');
 
-            if (k.match(/ball/i)) {
+            if (itemsMap[item.item_id].match(/ball/i)) {
                 $item.addClass('ball');
                 input.attr('type', 'radio').attr('name', 'ball');
 
-                if (k.match(/poke/i)) {
+                if (itemsMap[item.item_id].match(/poke/i)) {
                     input.attr('checked', true);
                 }
 
                 itemSelection.append(input);
 
-            } else if (k.match(/berry/i)) {
+            } else if (itemsMap[item.item_id].match(/berry/i)) {
 
                 $item.addClass('berry');
                 input.attr('type', 'checkbox').attr('name', 'berry');
@@ -443,7 +476,7 @@ var updateItems = function (result) {
 
                 itemSelection.append(input);
 
-            } else if (k.match(/unlimited/i)) {
+            } else if (itemsMap[item.item_id].match(/unlimited/i)) {
 
                 $item.find('.item-recycle input').remove();
                 $itemRecycleButton.remove();

@@ -16,7 +16,6 @@ if (Number.prototype.toDegrees === undefined) {
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
-var pokedex = require('pokemon-go-pokedex');
 var PokemonGo = require('pokemon-go-node-api');
 
 //PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
@@ -272,6 +271,8 @@ Controller.prototype.startMapScanner = function (user) {
                 return;
             }
 
+            console.log('[i] Heartbeat for '+ user);
+
             var mapObjects = {
                 nearbyPokemons: [],
                 wildPokemons:   [],
@@ -353,7 +354,6 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
     var inventory = yield Q.nfcall(currentUser.GetInventory);
 
     currentUser.inventory = parseInventory(inventory);
-    currentUser.pokedex = pokedex;
     currentUser.logged = true;
 
     if (!doNotScan) {
