@@ -110,7 +110,9 @@ var serialize = function (toSerialize) {
         'useHeartBeat',
         'Auth',
         'debug',
-        'lastObjectsCall'
+        'lastObjectsCall',
+        'j',
+        'google'
     ];
 
     if (typeof toSerialize === 'string') {
@@ -158,6 +160,46 @@ var serialize = function (toSerialize) {
 
 };
 
+var parseInventory = function (inventory) {
+
+    var cleanedInventory = {player_stats: null, eggs: [], pokemon: [], items: []};
+    for (var i = 0; i < inventory.inventory_delta.inventory_items.length; i++) {
+        var inventory_item_data = inventory.inventory_delta.inventory_items[i].inventory_item_data;
+
+        // Check for pokemon.
+        if (inventory_item_data.pokemon) {
+            var pokemon = inventory_item_data.pokemon;
+            if (pokemon.is_egg) {
+                //     console.log('  [E] ' + pokemon.egg_km_walked_target + ' Egg');
+                cleanedInventory.eggs.push(pokemon);
+            } else {
+                //   var pokedexInfo = api.pokemonlist[parseInt(pokemon.pokemon_id) - 1];
+                //        console.log('  [P] ' + pokedexInfo.name + ' - ' + pokemon.cp + ' CP');
+                cleanedInventory.pokemon.push(pokemon);
+            }
+        }
+
+        // Check for player stats.
+        if (inventory_item_data.player_stats) {
+            var player = inventory_item_data.player_stats;
+            //       console.log('  [PL] Level ' + player.level + ' - ' + player.unique_pokedex_entries + ' Unique Pokemon');
+
+            cleanedInventory.player_stats = player;
+        }
+
+        // Check for item.
+        if (inventory_item_data.item) {
+            var item = inventory_item_data.item;
+            //     console.log('  [I] ' + item.item_id + ' - ' + item.count);
+
+            cleanedInventory.items.push(item);
+        }
+    }
+
+    return cleanedInventory;
+
+};
+
 var Controller = function () {
 
     this.walkingInterval = null;
@@ -182,7 +224,10 @@ Controller.prototype.checkLevelUp = Q.async(function*() {
 
     if (lur.LevelUpRewardsResponse.items_awarded.length) {
 
-        var response = yield this.externalPlayer.inventory.update();
+        var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+        this.externalPlayer.inventory = parseInventory(inventory);
+
+        var response = this.externalPlayer.inventory;
 
         response.LevelUpRewardsResponse = lur.LevelUpRewardsResponse;
 
@@ -196,11 +241,12 @@ Controller.prototype.amILoggedRoute = function (req, res) {
 
     var user = this[req.params.user];
 
-    if (user && user.player && user.player.location) {
+    if (user) {
 
         var response = serialize(this[req.params.user]);
 
-        response.location = {lat: user.player.location.latitude, lng: user.player.location.longitude};
+        var userCoords = user.GetLocationCoords();
+        response.location = {lat: userCoords.latitude, lng: userCoords.longitude};
 
         res.send(response);
 
@@ -221,6 +267,10 @@ Controller.prototype.startMapScanner = function (user) {
         var currentUser = self[currentUserString];
 
         currentUser.Heartbeat(function (error, objects) {
+
+            if (!objects) {
+                return;
+            }
 
             var mapObjects = {
                 nearbyPokemons: [],
@@ -252,7 +302,7 @@ Controller.prototype.startMapScanner = function (user) {
              */
 
 
-            self[user + 'MapObjects'] = objects;
+            self[user + 'MapObjects'] = mapObjects;
 
             var coords = currentUser.GetLocationCoords();
 
@@ -296,9 +346,13 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
     var _password = currentUserString !== 'pokemonGo' ? this.playerPassword : botPassword;
     var _provider = currentUserString !== 'pokemonGo' ? this.playerProvider : botProvider;
 
-    var playerInfo = yield Q.nfcall(currentUser.init, _username, _password, location, _provider);
+    yield Q.nfcall(currentUser.init, _username, _password, location, _provider);
 
-    currentUser.playerObject = yield  Q.nfcall(currentUser.GetProfile);
+    currentUser.playerObject = yield Q.nfcall(currentUser.GetProfile);
+
+    var inventory = yield Q.nfcall(currentUser.GetInventory);
+
+    currentUser.inventory = parseInventory(inventory);
     currentUser.pokedex = pokedex;
     currentUser.logged = true;
 
@@ -306,7 +360,7 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
         this.startMapScanner(currentUserString);
     }
 
-    var serializedPlayer = serialize(playerInfo);
+    var serializedPlayer = serialize(currentUser);
 
     return serializedPlayer;
 
@@ -321,7 +375,8 @@ Controller.prototype.useIncubatorRoute = Q.async(function*(req, res) {
 
     console.log(useIncubatorResponse);
 
-    yield this.externalPlayer.inventory.update();
+    var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+    this.externalPlayer.inventory = parseInventory(inventory);
 
     res.send(serialize(this.externalPlayer));
 
@@ -334,7 +389,8 @@ Controller.prototype.recycleRoute = Q.async(function*(req, res) {
 
     yield this.externalPlayer.recycle(item_id, count);
 
-    yield this.externalPlayer.inventory.update();
+    var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+    this.externalPlayer.inventory = parseInventory(inventory);
 
     res.send(serialize(this.externalPlayer));
 
@@ -352,7 +408,8 @@ Controller.prototype.transferRoute = Q.async(function*(req, res) {
 
     yield pokemonToTransfer.release();
 
-    yield this.externalPlayer.inventory.update();
+    var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+    this.externalPlayer.inventory = parseInventory(inventory);
 
     res.send(serialize(this.externalPlayer));
 
@@ -370,7 +427,8 @@ Controller.prototype.checkHatchedEggs = Q.async(function*() {
 
     if (hatchedEggsResponse.success && hatchedEggsResponse.pokemon_id.length > 0) {
 
-        yield this.externalPlayer.inventory.update();
+        var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+        this.externalPlayer.inventory = parseInventory(inventory);
 
         var response = serialize(this.externalPlayer);
         response.GetHatchedEggsResponse = serialize(hatchedEggsResponse);
@@ -430,7 +488,8 @@ Controller.prototype.lootPokestop = Q.async(function*(req, res) {
 
         if (pokeStop) {
             let loot = yield pokeStop.search();
-            yield this.externalPlayer.inventory.update();
+            var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+            this.externalPlayer.inventory = parseInventory(inventory);
             var response = {loot, playerInfo: serialize(this.externalPlayer)};
 
             yield this.checkLevelUp();
@@ -471,7 +530,8 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
 
             var catchResult = yield pokemon.catch(ball);
 
-            yield this.externalPlayer.inventory.update();
+            var inventory = yield Q.nfcall(this.externalPlayer.GetInventory);
+            this.externalPlayer.inventory = parseInventory(inventory);
 
             var response = serialize(this.externalPlayer);
 
@@ -537,10 +597,14 @@ Controller.prototype.walkToPoint = function (req, res) {
         latStart = newCoordinates.lat;
         lngStart = newCoordinates.lng;
 
-        self.externalPlayer.player.location = {
-            latitude:  newCoordinates.lat,
-            longitude: newCoordinates.lng
-        };
+        self.externalPlayer.SetLocation({
+            type:   'coords',
+            coords: {
+                latitude:  newCoordinates.lat,
+                longitude: newCoordinates.lng,
+                altitude:  0
+            }
+        });
 
         var walkingData = newCoordinates;
 
@@ -575,10 +639,14 @@ Controller.prototype.initSocketIOListeners = function () {
     });
 
     self.socket.on('moveTo', function (latLng) {
-        self.pokemonGo.player.location = {
-            latitude:  latLng.lat,
-            longitude: latLng.lng
-        };
+        self.pokemonGo.SetLocation({
+            type:   'coords',
+            coords: {
+                latitude:  latLng.lat,
+                longitude: latLng.lng,
+                altitude:  0
+            }
+        });
     });
 
 };

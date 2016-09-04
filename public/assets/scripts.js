@@ -482,14 +482,14 @@ var updatePokemonList = function (result) {
 
 var updatePlayerStatus = function (result) {
 
-    $('.player-status .level').text(result.player.level);
+    $('.player-status .level').text(result.inventory.player_stats.level);
     $('.player-status').show();
 
-    var nextLevel = result.player.next_level_xp;
+    var nextLevel = result.inventory.player_stats.next_level_xp;
     var prevLevel = 0;
-    var exp = result.player.experience;
+    var exp = result.inventory.player_stats.experience;
 
-    for (var i = 0; i < result.player.level - 1; i++) {
+    for (var i = 0; i < result.inventory.player_stats.level - 1; i++) {
 
         var level = levels[i];
 
@@ -571,7 +571,7 @@ var createPokemonListThumbnails = function (result) {
 
         pokemonTemplate.find('.cp .points').text(pokemon.cp);
 
-        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + pokemon.num + '.png');
+        pokemonTemplate.find('img').prop('src', '/assets/images/pokemons/' + getPokemonNum(pokemon.PokedexNumber) + '.png');
 
         var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
         pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
@@ -770,6 +770,19 @@ var clickOnPokemon = function () {
 
 };
 
+var getPokemonNum = function (num) {
+
+    var pokemonNum = num;
+
+    if (pokemonNum < 10) {
+        pokemonNum = '00' + pokemonNum;
+    } else if (pokemonNum < 100) {
+        pokemonNum = '0' + pokemonNum;
+    }
+
+    return pokemonNum;
+};
+
 var createPokeMarkers = function (map, markers) {
 
     for (var j = 0; j < markers.length; j++) {
@@ -789,13 +802,7 @@ var createPokeMarkers = function (map, markers) {
             continue;
         }
 
-        var pokemonNum = pokemon.pokemon.PokemonId;
-
-        if (pokemonNum < 10) {
-            pokemonNum = '00' + pokemonNum;
-        } else if (pokemonNum < 100) {
-            pokemonNum = '0' + pokemonNum;
-        }
+        var pokemonNum = getPokemonNum(pokemon.pokemon.PokemonId);
 
         var image = {
             url:        '/assets/images/pokemons/' + pokemonNum + '.png',
@@ -1012,7 +1019,7 @@ var updateNearbyRadar = function (nearbyPokemons) {
 
         var pokemon = nearbyPokemons[i];
         var img = $('<img/>')
-            .attr('src', '/assets/images/pokemons/' + pokemon.num + '.png')
+            .attr('src', '/assets/images/pokemons/' + getPokemonNum(pokemon.PokedexNumber) + '.png')
             .attr('title', pokemon.name);
 
         nearbyPlaceholder.append(img);

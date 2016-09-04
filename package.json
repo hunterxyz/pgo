@@ -8,6 +8,7 @@
     "cors": "^2.8.0",
     "express": "^4.14.0",
     "lodash": "^4.14.1",
+    "pokemon-go-node-api": "armax/Pokemon-GO-node-api",
     "pokemon-go-pokedex": "biuni/PokemonGO-Pokedex",
     "q": "^1.4.1",
     "serve-static": "^1.11.1",
