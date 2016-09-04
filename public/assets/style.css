@@ -209,14 +209,52 @@ body {
   overflow: auto;
   height: 600px;
 }
-.pokemons-wrapper .eggs .egg {
+.pokemons-wrapper .eggs .eggs-selection {
+  width: 100%;
+  overflow: auto;
+  height: 600px;
+}
+.pokemons-wrapper .eggs .eggs-selection .egg {
   width: 100px;
   float: left;
   text-align: center;
   margin-top: 20px;
+  cursor: pointer;
 }
-.pokemons-wrapper .eggs .egg img {
+.pokemons-wrapper .eggs .eggs-selection .egg img {
   height: 60px;
+}
+.pokemons-wrapper .eggs .incubators-layer {
+  position: absolute;
+  width: 100%;
+  overflow: auto;
+  height: 100%;
+  top: 0;
+  left: -300px;
+  transition: left 200ms ease-in 0ms;
+}
+.pokemons-wrapper .eggs .incubators-layer.open {
+  left: 0;
+}
+.pokemons-wrapper .eggs .incubators-layer .close {
+  position: absolute;
+  top: 400px;
+  right: 5px;
+  cursor: pointer;
+}
+.pokemons-wrapper .eggs .incubators-layer .incubators {
+  position: absolute;
+  height: 150px;
+  bottom: 0;
+  overflow: auto;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pokemons-wrapper .eggs .incubators-layer .incubators .incubator {
+  display: inline-block;
+}
+.pokemons-wrapper .eggs .incubators-layer .incubators .incubator img {
+  width: 100px;
 }
 .pokemons-wrapper .pokemons {
   width: 100%;

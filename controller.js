@@ -21,13 +21,27 @@ var PokemonGo = require('pokemongo-api').default;
 
 PokemonGo.prototype.recycle = Q.async(function*(item_id, count) {
 
-    return yield this.Call([{request: 'RECYCLE_INVENTORY_ITEM', message: {item_id, count}}]);
+    return yield this.Call([
+        {
+            request: 'RECYCLE_INVENTORY_ITEM',
+            message: {
+                item_id, count
+            }
+        }
+    ]);
 
 });
 
-PokemonGo.prototype.useIncubator = Q.async(function*(item_id, pokemon) {
+PokemonGo.prototype.useIncubator = Q.async(function*(item_id, pokemon_id) {
 
-    return yield this.Call([{request: 'USE_ITEM_EGG_INCUBATOR', message: {item_id, pokemon_id: pokemon.pokemon_id}}]);
+    return yield this.Call([
+        {
+            request: 'USE_ITEM_EGG_INCUBATOR',
+            message: {
+                item_id:    String(item_id),
+                pokemon_id: pokemon_id
+            }
+        }]);
 
 });
 
@@ -40,6 +54,20 @@ PokemonGo.prototype.useCapture = Q.async(function*(itemId, pokemon) {
                 item_id:        itemId,
                 encounter_id:   pokemon.encounter_id,
                 spawn_point_id: pokemon.spawn_point_id
+            }
+        }
+    ]);
+
+});
+
+
+PokemonGo.prototype.levelUp = Q.async(function*(level) {
+
+    return yield this.Call([
+        {
+            request: 'LEVEL_UP_REWARDS',
+            message: {
+                level: level
             }
         }
     ]);
@@ -86,6 +114,10 @@ var serialize = function (toSerialize) {
     ];
 
     if (typeof toSerialize === 'string') {
+        return toSerialize;
+    }
+
+    if (typeof toSerialize === 'number') {
         return toSerialize;
     }
 
@@ -143,6 +175,22 @@ var Controller = function () {
     this.playerProvider = 'ptc';
 
 };
+
+Controller.prototype.checkLevelUp = Q.async(function*() {
+
+    var lur = yield this.externalPlayer.levelUp(this.externalPlayer.player.level);
+
+    if (lur.LevelUpRewardsResponse.items_awarded.length) {
+
+        var response = yield this.externalPlayer.inventory.update();
+
+        response.LevelUpRewardsResponse = lur.LevelUpRewardsResponse;
+
+        this.socket.emit('levelUpRewards', serialize(response));
+
+    }
+
+});
 
 Controller.prototype.amILoggedRoute = function (req, res) {
 
@@ -239,6 +287,21 @@ Controller.prototype.login = Q.async(function*(lat, lng, user, doNotScan) {
 
 });
 
+Controller.prototype.useIncubatorRoute = Q.async(function*(req, res) {
+
+    var eggId = req.body.egg_id;
+    var incubatorId = req.body.incubator_id;
+
+    var useIncubatorResponse = yield this.externalPlayer.useIncubator(incubatorId, eggId);
+
+    console.log(useIncubatorResponse);
+
+    yield this.externalPlayer.inventory.update();
+
+    res.send(serialize(this.externalPlayer));
+
+});
+
 Controller.prototype.recycleRoute = Q.async(function*(req, res) {
 
     var item_id = req.body.item_id;
@@ -288,6 +351,8 @@ Controller.prototype.checkHatchedEggs = Q.async(function*() {
         response.GetHatchedEggsResponse = serialize(hatchedEggsResponse);
 
         this.socket.emit('hatchedEgg', response);
+
+        yield this.checkLevelUp();
     }
 
 });
@@ -318,6 +383,7 @@ Controller.prototype.logoutRoute = function (req, res) {
     this.stopMapScanner('externalPlayer');
     clearInterval(this.walkingInterval);
     this.externalPlayer = null;
+
     res.send({});
 
 };
@@ -341,6 +407,8 @@ Controller.prototype.lootPokestop = Q.async(function*(req, res) {
             let loot = yield pokeStop.search();
             yield this.externalPlayer.inventory.update();
             var response = {loot, playerInfo: serialize(this.externalPlayer)};
+
+            yield this.checkLevelUp();
 
             res.send(response);
 
@@ -385,6 +453,8 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
             response.encounteredPokemon = serialize(encounteredPokemon);
             response.catchResult = serialize(catchResult);
 
+            yield this.checkLevelUp();
+
             res.send(response);
 
         } else {
@@ -425,7 +495,9 @@ Controller.prototype.walkToPoint = function (req, res) {
         var stepDistance = metersPerSecond * stepFrequency;
         var nexStepDistance = ((timer / stepFrequency)) * stepDistance;
 
-        self.checkHatchedEggs();
+        if (timer % 5 === 0) {
+            self.checkHatchedEggs();
+        }
 
         if (timer > seconds || nexStepDistance > distance) {
             stepDistance = distance % (metersPerSecond * stepFrequency);

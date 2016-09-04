@@ -272,6 +272,7 @@ var afterLogout = function () {
     rightClickListener.remove();
     initMapMouseInterations();
     $('.walking-data').removeClass('visible');
+    $('.player-status').hide();
 
 };
 
@@ -476,6 +477,7 @@ var updatePokemonList = function (result) {
 
     createPokemonListThumbnails(result);
     createEggListThumbnails(result);
+    createIcubatorListThumbnails(result);
 };
 
 var updatePlayerStatus = function (result) {
@@ -587,7 +589,7 @@ var createEggListThumbnails = function (result) {
 
     $counter.find('.count').text(result.inventory.eggs.length);
 
-    var $eggsContainer = $('.pokemons-wrapper .eggs');
+    var $eggsContainer = $('.pokemons-wrapper .eggs-selection');
     $eggsContainer.html('');
 
     _.each(result.inventory.eggs, function (egg) {
@@ -601,11 +603,89 @@ var createEggListThumbnails = function (result) {
             eggTemplate.find('img').prop('src', '/assets/images/items/incubatorBasicUnlimited.png');
         } else {
             eggTemplate.find('img').prop('src', '/assets/images/pokemon-egg.png');
+
+            eggTemplate.on('click', function () {
+
+                var $incubatorsContainer = $('.pokemons-wrapper .incubators-layer');
+
+                $incubatorsContainer.addClass('open').data('eggId', egg.id);
+
+            });
         }
 
         $eggsContainer.append(eggTemplate);
 
     });
+};
+
+var attachIncubatorAction = function ($incubator) {
+
+    $incubator.on('click', function () {
+
+        var eggId = $(this).parents('.incubators-layer').data('eggId');
+        var incubatorId = $(this).data('itemId');
+
+        var data = {
+            egg_id:       eggId,
+            incubator_id: incubatorId
+        };
+
+        $.ajax({
+            method:      'POST',
+            url:         '/player/useIncubator',
+            data:        JSON.stringify(data),
+            contentType: 'application/json',
+            dataType:    'json'
+        }).success(function (result) {
+
+            updatePlayerStatus(result);
+
+        });
+
+    });
+
+};
+var createIcubatorListThumbnails = function (result) {
+
+    var $incubatorsContainer = $('.pokemons-wrapper .incubators-layer .incubators');
+    $incubatorsContainer.html('');
+    /*
+     incubatorBasic
+     :
+     {item_id: 902, count: 2, unseen: false}
+     $incubatorBasicUnlimited
+     :
+     {item_id: 901, count: 1, unseen: true}
+     */
+    var $incubatorTemplate = $('.templates .incubator');
+
+    var items = result.inventory.items;
+
+    if (items.incubatorBasicUnlimited.count) {
+
+        var $incubatorBasicUnlimited = $incubatorTemplate.clone();
+
+        $incubatorBasicUnlimited.find('img').prop('src', '/assets/images/items/incubatorBasicUnlimited.png');
+        $incubatorBasicUnlimited.data('itemId', items.incubatorBasicUnlimited.item_id);
+        attachIncubatorAction($incubatorBasicUnlimited);
+
+        $incubatorsContainer.append($incubatorBasicUnlimited);
+    }
+
+    if (items.incubatorBasic.count) {
+        for (var i = 0; i < items.count; i++) {
+
+            var incubatorBasic = $incubatorTemplate.clone();
+
+            incubatorBasic.find('img').prop('src', '/assets/images/items/incubatorBasic.png');
+            incubatorBasic.data('itemId', items.incubatorBasic.item_id);
+            attachIncubatorAction(incubatorBasic);
+            $incubatorsContainer.append(incubatorBasic);
+
+        }
+
+    }
+
 };
 
 var limitMarkers = function (markers, limit) {
@@ -973,6 +1053,12 @@ socket.on('connect', function () {
 
     });
 
+    socket.on('levelUpRewards', function (response) {
+
+        console.log(response);
+
+    });
+
     socket.on('populateMap', function (objects) {
 
         populateMap(objects);
@@ -1084,18 +1170,24 @@ var initPokemonList = function () {
     var $pokemonButton = $('.pokemon-button');
     var $pokemonsWrapper = $('.pokemons-wrapper');
     var $pokemonsDetailsWrapper = $('.pokemon-details-wrapper');
+    var $incubatorsLayer = $('.incubators-layer');
 
     $pokemonButton.on('click', function () {
         $pokemonsWrapper.addClass('open');
     });
 
-    $pokemonsWrapper.find('.close').on('click', function () {
+    $pokemonsWrapper.find('.close').first().on('click', function () {
         $pokemonsWrapper.removeClass('open');
     });
 
     $pokemonsDetailsWrapper.find('.close').on('click', function () {
         $pokemonsDetailsWrapper.removeClass('open');
     });
+
+    $incubatorsLayer.find('.close').first().on('click', function () {
+        $incubatorsLayer.removeClass('open');
+    });
+
 };
 
 $(document).ready(function () {
@@ -1115,7 +1207,7 @@ $(document).ready(function () {
                 show: false
             },
             Seconds: {
-                text:  'Seconds:',
+                text:  'next scan:',
                 color: '#FF9999',
                 show:  true
             }

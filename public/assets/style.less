@@ -251,14 +251,59 @@ html, body {
         overflow: auto;
         height: 600px;
 
-        .egg {
-            width: 100px;
-            float: left;
-            text-align: center;
-            margin-top: 20px;
+        .eggs-selection {
+            width: 100%;
+            overflow: auto;
+            height: 600px;
 
-            img {
-                height: 60px;
+            .egg {
+                width: 100px;
+                float: left;
+                text-align: center;
+                margin-top: 20px;
+                cursor: pointer;
+
+                img {
+                    height: 60px;
+                }
+            }
+        }
+
+        .incubators-layer {
+            position: absolute;
+            width: 100%;
+            overflow: auto;
+            height: 100%;
+            top: 0;
+            left: -300px;
+            transition: left 200ms ease-in 0ms;
+
+            &.open {
+                left: 0;
+            }
+
+            .close {
+                position: absolute;
+                top: 400px;
+                right: 5px;
+                cursor: pointer;
+            }
+
+            .incubators {
+                position: absolute;
+                height: 150px;
+                bottom: 0;
+                overflow: auto;
+                white-space: nowrap;
+                cursor: pointer;
+
+                .incubator {
+                    display: inline-block;
+
+                    img {
+                        width: 100px;
+                    }
+                }
             }
         }
     }

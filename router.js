@@ -32,15 +32,17 @@ router.init = function (app) {
 
         app.post('/walkToPoint', wrapController(controller.walkToPoint));
         app.post('/moveto', wrapController(controller.moveTo));
+
         app.post('/player/login', wrapController(controller.loginRoute));
         app.post('/player/logout', wrapController(controller.logoutRoute));
         app.post('/player/lootpokestop', wrapController(controller.lootPokestop));
         app.post('/player/catchpokemon', wrapController(controller.catchPokemon));
         app.post('/player/recycle', wrapController(controller.recycleRoute));
+        app.post('/player/useincubator', wrapController(controller.useIncubatorRoute));
         app.post('/player/transfer', wrapController(controller.transferRoute));
         app.post('/player/evolve', wrapController(controller.evolveRoute));
 
-        app.get('/amilogged/:user',wrapController(controller.amILoggedRoute));
+        app.get('/amilogged/:user', wrapController(controller.amILoggedRoute));
 
         controller.initSocketIOListeners();
 

@@ -23,7 +23,8 @@
         <div class="speed">
             <select name="speed">
                 <option selected value="5">5 km/h (walk)</option>
-                <option value="20">10 km/h (run)</option>
+                <option value="10">10 km/h (run)</option>
+                <option selected value="15">15 km/h (run - fast)</option>
                 <option value="20">20 km/h (bike)</option>
                 <option value="50">50 km/h (car - city)</option>
                 <option value="120">120 km/h (car - highway - slow)</option>
@@ -99,18 +100,24 @@
                     <li class="pokemons-tab-link">
                         <a href="#pokemons">
                             <span>Pokemons</span><br/>
-                            <span class="counter"><span class="count"></span>/<span class="total"></span></span>
+                            <span class="counter"><span class="count"></span> / <span class="total"></span></span>
                         </a>
                     </li>
                     <li class="eggs-tab-link">
                         <a href="#eggs">
                             <span>Eggs</span><br/>
-                            <span class="counter"><span class="count"></span>/<span class="total">9</span></span>
+                            <span class="counter"><span class="count"></span> / <span class="total">9</span></span>
                         </a>
                     </li>
                 </ul>
                 <div id="pokemons" class="pokemons"></div>
-                <div id="eggs" class="eggs"></div>
+                <div id="eggs" class="eggs">
+                    <div class="eggs-selection"></div>
+                    <div class="incubators-layer">
+                        <div class="close">X</div>
+                        <div class="incubators"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -158,8 +165,17 @@
                 <div class="image-wrapper">
                     <img src="/assets/images/pokemon-egg.png" alt="">
                 </div>
-                <div class="egg-kms"><span class="walked"></span><span class="separator">/</span><span
-                        class="target"></span> km
+                <div class="egg-kms">
+                    <span class="walked"></span>
+                    <span class="separator">/</span>
+                    <span class="target"></span> km
+                </div>
+            </div>
+
+
+            <div class="incubator">
+                <div class="image-wrapper">
+                    <img src="" alt="">
                 </div>
             </div>
 
