@@ -495,7 +495,7 @@ Controller.prototype.walkToPoint = function (req, res) {
         var stepDistance = metersPerSecond * stepFrequency;
         var nexStepDistance = ((timer / stepFrequency)) * stepDistance;
 
-        if (timer % 5 === 0) {
+        if (timer % 15 === 0) {
             self.checkHatchedEggs();
         }
 

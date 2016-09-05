@@ -1050,6 +1050,7 @@ socket.on('connect', function () {
     socket.on('hatchedEgg', function (response) {
 
         console.log(response);
+        updatePlayerStatus(response);
 
     });
 
