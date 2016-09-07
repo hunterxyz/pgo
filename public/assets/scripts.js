@@ -388,6 +388,7 @@ var findCandies = function (pokemon, result) {
 var updateItems = function (result) {
     var $item;
     var razzBerryWasSelected = $('.backpack .item.berry input[type=checkbox]:checked').length;
+    var selectedBall = $('[type=radio]:checked').parent().parent().find('.item-recycle button').data('itemId');
     var $backpack = $('.backpack tbody').html('');
     var $itemrow = $('<tr/>').addClass('item');
     var $itemImage = $('<td><img/></td>').addClass('item-image');
@@ -427,7 +428,13 @@ var updateItems = function (result) {
                 input.attr('type', 'radio').attr('name', 'ball');
 
                 if (k.match(/poke/i)) {
+
                     input.attr('checked', true);
+
+                } else if (selectedBall === item.item_id) {
+
+                    input.attr('checked', true);
+
                 }
 
                 itemSelection.append(input);
@@ -726,6 +733,11 @@ var clickOnPokemon = function () {
         ball:         $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
         useRazzBerry: $('.backpack .item.berry input[type=checkbox]:checked').length
     };
+
+    if (!data.ball){
+        alert('Select a Ball');
+        return;
+    }
 
     $.ajax({
         method:      'POST',
