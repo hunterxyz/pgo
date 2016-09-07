@@ -41,6 +41,7 @@ router.init = function (app) {
         app.post('/player/useincubator', wrapController(controller.useIncubatorRoute));
         app.post('/player/transfer', wrapController(controller.transferRoute));
         app.post('/player/evolve', wrapController(controller.evolveRoute));
+        app.post('/player/rename', wrapController(controller.renameRoute));
 
         app.get('/amilogged/:user', wrapController(controller.amILoggedRoute));
 

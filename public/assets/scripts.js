@@ -542,6 +542,78 @@ var resetTransferButton = function (pokemon) {
 
 };
 
+var resetRenameButton = function (pokemon) {
+
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var currentName = pokemon.nickname || pokemon.name;
+
+    pokemonDetailsWrapper.find('.pokemon-name').val(currentName);
+    pokemonDetailsWrapper.find('.button.rename-button').off('click');
+    pokemonDetailsWrapper.find('.button.rename-button').on('click', function () {
+
+        var name = pokemonDetailsWrapper.find('.pokemon-name').val();
+
+        $.ajax({
+            method:      'POST',
+            url:         '/player/rename',
+            data:        JSON.stringify({id: pokemon.id, name: name}),
+            contentType: 'application/json',
+            dataType:    'json'
+        }).success(function (result) {
+
+            pokemonDetailsWrapper.find('.close').click();
+            updatePokemonList(result);
+
+        }).fail(function () {
+            alert('no data');
+        });
+
+    });
+
+};
+
+var resetEvolveButton = function (pokemon, result) {
+    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
+    var pokemonFamilyCandies = findCandies(pokemon, result);
+
+    pokemonDetails.find('.button-wrapper .button.evolve-button').off('click');
+    pokemonDetails.find('.button-wrapper').removeClass('not-enough-candies');
+    pokemonDetails.find('.button-wrapper').removeClass('max-evolution');
+    if (pokemon.next_evolution && pokemon.next_evolution.length) {
+
+        if (pokemon.candy_count > pokemonFamilyCandies.candies) {
+            pokemonDetails.find('.button-wrapper').addClass('not-enough-candies');
+        } else {
+
+            pokemonDetails.find('.button-wrapper .button.evolve-button').on('click', function () {
+                $.ajax({
+                    method:      'POST',
+                    url:         '/player/evolve',
+                    data:        JSON.stringify({id: pokemon.id}),
+                    contentType: 'application/json',
+                    dataType:    'json'
+                }).success(function (evolveResult) {
+
+                    pokemonDetailsWrapper.find('.close').click();
+                    updatePokemonList(evolveResult);
+
+                }).fail(function () {
+                    alert('no data');
+                });
+            });
+        }
+
+        pokemonDetails.find('.candies-count').text(pokemon.candy_count);
+
+    } else {
+
+        pokemonDetails.find('.button-wrapper').addClass('max-evolution');
+
+    }
+
+};
+
 var openDetails = function (pokemon, result) {
 
     var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
@@ -555,7 +627,9 @@ var openDetails = function (pokemon, result) {
     pokemonDetails.find('.candy-family').text(pokemonFamilyCandies.name);
     pokemonDetails.find('.total-stardust').text(result.playerObject.currencies[1].amount);
 
+    resetEvolveButton(pokemon, result);
     resetTransferButton(pokemon);
+    resetRenameButton(pokemon);
 
     pokemonDetailsWrapper.addClass('open');
 
@@ -569,7 +643,7 @@ var createPokemonListThumbnails = function (result) {
     $counter.find('.total').text(result.playerObject.max_pokemon_storage);
 
     var $pokemonsContainer = $('.pokemons-wrapper .pokemons');
-    var pokemonsList = _.orderBy(result.inventory.pokemons, ['name', 'cp'], ['asc', 'desc']);
+    var pokemonsList = _.orderBy(result.inventory.pokemons, ['pokemon_id', 'cp'], ['asc', 'desc']);
     $pokemonsContainer.html('');
 
     _.each(pokemonsList, function (pokemon) {
@@ -582,7 +656,7 @@ var createPokemonListThumbnails = function (result) {
 
         var staminaPercentage = pokemon.stamina * 100 / pokemon.stamina_max;
         pokemonTemplate.find('.hp-level').width(staminaPercentage + '%');
-        pokemonTemplate.find('.name').text(pokemon.name);
+        pokemonTemplate.find('.name').text(pokemon.nickname || pokemon.name);
         pokemonTemplate.on('click', $.proxy(openDetails, this, pokemon, result));
 
         $pokemonsContainer.append(pokemonTemplate);

@@ -173,40 +173,101 @@ html, body {
         .image-wrapper {
             text-align: center;
         }
-    }
 
-    .button {
-        width: 170px;
-        height: 30px;
-        border-radius: 30px;
-        background-color: skyblue;
-        margin: 0 auto;
-        cursor: pointer;
-        color: white;
-        text-align: center;
-        line-height: 30px;
-        margin-top: 25px;
+        .pokemon-name{
+            width: 170px;
+        }
 
-    }
+        .button {
+            width: 170px;
+            height: 30px;
+            border-radius: 30px;
+            background-color: skyblue;
+            cursor: pointer;
+            color: white;
+            text-align: center;
+            line-height: 30px;
 
-    .currencies {
-        width: 260px;
-        font-size: 11px;
-        text-align: center;
-        margin: 0 auto;
-
-        td {
-            width: 50%;
-
-            .count {
-                font-size: 20px;
+            &.transfer-button {
+                margin: 0 auto;
+                margin-top: 25px;
             }
 
-            img {
-                height: 20px;
-                vertical-align: text-bottom;
+        }
+
+        .input-name-wrapper{
+            width: 170px;
+            margin: 0 auto;
+
+            input{
+                width: 100%;
+                box-sizing: border-box;
+                height: 30px;
+                text-align: center;
+            }
+
+            .button{
+                width: 70%;
+                margin: 5px auto 0 auto;
             }
         }
+
+        .button-wrapper {
+            width: 170px;
+            height: 30px;
+            border-radius: 30px;
+            background-color: rgba(135, 206, 235, 0.6);
+            text-align: center;
+            line-height: 30px;
+            margin: 0 auto;
+            margin-top: 25px;
+
+            img {
+                height: 70%;
+                vertical-align: middle;
+            }
+
+            div {
+                float: left;
+                height: 100%;
+                line-height: 30px;
+                width: 50%;
+
+                span {
+                    vertical-align: middle;
+                }
+            }
+
+            &.not-enough-candies {
+                opacity: 0.5;
+            }
+
+            &.max-evolution {
+                display: none;
+            }
+        }
+
+        .currencies {
+            width: 260px;
+            font-size: 11px;
+            text-align: center;
+            margin: 0 auto;
+            margin-top: 20px;
+
+            td {
+                width: 50%;
+
+                .count {
+                    font-size: 20px;
+                }
+
+                img {
+                    height: 20px;
+                    vertical-align: text-bottom;
+                }
+            }
+        }
+
     }
 
 }

@@ -149,31 +149,80 @@ body {
 .pokemon-details-wrapper .pokemon-details .image-wrapper {
   text-align: center;
 }
-.pokemon-details-wrapper .button {
+.pokemon-details-wrapper .pokemon-details .pokemon-name {
+  width: 170px;
+}
+.pokemon-details-wrapper .pokemon-details .button {
   width: 170px;
   height: 30px;
   border-radius: 30px;
   background-color: skyblue;
-  margin: 0 auto;
   cursor: pointer;
   color: white;
   text-align: center;
   line-height: 30px;
+}
+.pokemon-details-wrapper .pokemon-details .button.transfer-button {
+  margin: 0 auto;
   margin-top: 25px;
 }
-.pokemon-details-wrapper .currencies {
+.pokemon-details-wrapper .pokemon-details .input-name-wrapper {
+  width: 170px;
+  margin: 0 auto;
+}
+.pokemon-details-wrapper .pokemon-details .input-name-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 30px;
+  text-align: center;
+}
+.pokemon-details-wrapper .pokemon-details .input-name-wrapper .button {
+  width: 70%;
+  margin: 5px auto 0 auto;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper {
+  width: 170px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: rgba(135, 206, 235, 0.6);
+  text-align: center;
+  line-height: 30px;
+  margin: 0 auto;
+  margin-top: 25px;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper img {
+  height: 70%;
+  vertical-align: middle;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper div {
+  float: left;
+  height: 100%;
+  line-height: 30px;
+  width: 50%;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper div span {
+  vertical-align: middle;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper.not-enough-candies {
+  opacity: 0.5;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper.max-evolution {
+  display: none;
+}
+.pokemon-details-wrapper .pokemon-details .currencies {
   width: 260px;
   font-size: 11px;
   text-align: center;
   margin: 0 auto;
+  margin-top: 20px;
 }
-.pokemon-details-wrapper .currencies td {
+.pokemon-details-wrapper .pokemon-details .currencies td {
   width: 50%;
 }
-.pokemon-details-wrapper .currencies td .count {
+.pokemon-details-wrapper .pokemon-details .currencies td .count {
   font-size: 20px;
 }
-.pokemon-details-wrapper .currencies td img {
+.pokemon-details-wrapper .pokemon-details .currencies td img {
   height: 20px;
   vertical-align: text-bottom;
 }

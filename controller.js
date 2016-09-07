@@ -333,9 +333,58 @@ Controller.prototype.transferRoute = Q.async(function*(req, res) {
 
 });
 
-// Controller.prototype.evolveRoute = Q.async(function*(req, res) {
-//     yield;
-// });
+Controller.prototype.evolveRoute = Q.async(function*(req, res) {
+
+    var id = Number(req.body.id);
+
+    var toEvolve = _.find(this.externalPlayer.inventory.pokemons, function (pokemon) {
+
+        return pokemon.id.toNumber() === id;
+
+    });
+
+    if (toEvolve) {
+
+        yield toEvolve.evolve();
+
+        yield this.externalPlayer.inventory.update();
+
+        res.send(serialize(this.externalPlayer));
+
+    } else {
+
+        res.send({error: 'Pokemon not found.'});
+
+    }
+
+});
+
+Controller.prototype.renameRoute = Q.async(function*(req, res) {
+
+    var id = Number(req.body.id);
+    var name = req.body.name;
+
+    var toRename = _.find(this.externalPlayer.inventory.pokemons, function (pokemon) {
+
+        return pokemon.id.toNumber() === id;
+
+    });
+
+    if (toRename) {
+
+        yield toRename.__proto__.nickname.call(toRename, name);
+
+        yield this.externalPlayer.inventory.update();
+
+        res.send(serialize(this.externalPlayer));
+
+    } else {
+
+        res.send({error: 'Pokemon not found.'});
+
+    }
+
+});
 
 Controller.prototype.checkHatchedEggs = Q.async(function*() {
 
