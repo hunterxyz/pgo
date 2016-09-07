@@ -13,6 +13,14 @@ if (Number.prototype.toDegrees === undefined) {
     };
 }
 
+var waitMs = function (time) {
+    return new Promise((resolve) => { // dont use reject
+        setTimeout(()=> {
+            resolve();
+        }, time);
+    });
+};
+
 require('babel-polyfill');
 var Q = require('q');
 var _ = require('lodash');
@@ -472,6 +480,33 @@ Controller.prototype.lootPokestop = Q.async(function*(req, res) {
 
 });
 
+Controller.prototype.encounterPokemonRoute = Q.async(function*(req, res) {
+
+    var pokemonLocation = req.body.location;
+
+    if (this.externalPlayerMapObjects) {
+
+        var pokemon = _.find(this.externalPlayerMapObjects.catchable_pokemons, {
+            latitude:  pokemonLocation.lat,
+            longitude: pokemonLocation.lng
+        });
+
+        if (pokemon) {
+
+            this.externalPlayer.lastEncounteredPokemon = yield pokemon.encounter();
+
+            res.send(serialize(this.externalPlayer.lastEncounteredPokemon));
+
+        }
+
+    }else{
+
+        res.send({error: 'Too far away'});
+
+    }
+
+});
+
 Controller.prototype.catchPokemon = Q.async(function*(req, res) {
 
     var ball = req.body.ball;
@@ -496,6 +531,8 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
             var catchResult = yield pokemon.catch(ball);
 
             yield this.externalPlayer.inventory.update();
+
+            yield waitMs(2000);
 
             var response = serialize(this.externalPlayer);
 
