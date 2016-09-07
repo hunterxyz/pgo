@@ -395,7 +395,7 @@ var updateItems = function (result) {
     var $itemCount = $('<td><div class="item-count"></td>');
     var $itemSelection = $('<td/>').addClass('item-selection');
     var $itemRecycle = $('<td><input value="0"/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
-    var $counter = $('.backpack-wrapper .count');
+    var $counter = $('.backpack-wrapper .counter');
 
     $counter.find('.count').text(_.sum(_.map(result.inventory.items, function (item) {
 
@@ -478,6 +478,11 @@ var updateItems = function (result) {
             $backpack.append($item);
         }
     });
+
+    if ($backpack.find('[type=radio]:checked').length === 0){
+        $backpack.find('[type=radio]').first().prop('checked', true);
+    }
+
 };
 
 var updatePokemonList = function (result) {
