@@ -507,7 +507,34 @@ Controller.prototype.encounterPokemonRoute = Q.async(function*(req, res) {
 
 });
 
-Controller.prototype.catchPokemon = Q.async(function*(req, res) {
+Controller.prototype.catchEncounteredPokemonRoute = Q.async(function*(req, res) {
+
+    var ball = req.body.ball;
+    var useRazzBerry = !!req.body.useRazzBerry;
+
+    if (useRazzBerry && this.externalPlayer.inventory.items.razzBerry.count) {
+        yield this.externalPlayer.useCapture(this.externalPlayer.inventory.items.razzBerry.item_id, this.externalPlayer.lastEncounteredPokemon);
+    }
+
+    var catchResult = yield this.externalPlayer.lastEncounteredPokemon.catch(ball);
+
+    yield waitMs(1000);
+
+    yield this.checkLevelUp();
+
+    yield waitMs(1000);
+
+    yield this.externalPlayer.inventory.update();
+
+    var response = serialize(this.externalPlayer);
+
+    response.catchResult = serialize(catchResult);
+
+    res.send(response);
+
+});
+
+Controller.prototype.encounterAndCatchPokemonRoute = Q.async(function*(req, res) {
 
     var ball = req.body.ball;
     var useRazzBerry = !!req.body.useRazzBerry;
@@ -530,9 +557,9 @@ Controller.prototype.catchPokemon = Q.async(function*(req, res) {
 
             var catchResult = yield pokemon.catch(ball);
 
-            yield this.externalPlayer.inventory.update();
-
             yield waitMs(2000);
+
+            yield this.externalPlayer.inventory.update();
 
             var response = serialize(this.externalPlayer);
 
