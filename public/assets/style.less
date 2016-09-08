@@ -158,6 +158,58 @@ html, body {
 
 .pokemon-details-wrapper {
 
+    &.encountered-pokemon {
+        display: none;
+        top: 50%;
+        left: 50%;
+        margin-top: -250px;
+        margin-left: -150px;
+        height: 500px;
+
+        &.open {
+            display: block;
+        }
+
+        ul.ball-selection {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            text-align: center;
+
+            li {
+                display: inline-block;
+
+                input[type=radio] {
+                    display: none;
+
+                    &:checked + label{
+                        border: 1px solid red;
+                    }
+                }
+
+                label {
+                    position: relative;
+                    height: 50px;
+                    width: 50px;
+                    display: block;
+                    box-sizing: border-box;
+                    cursor: pointer;
+                    border: 1px solid transparent;
+                    border-radius: 50%;
+
+                    img {
+                        height: 100%;
+                    }
+                }
+            }
+        }
+
+        .button{
+            margin: 20px auto 0 auto;
+        }
+    }
+
     .pokemon-details {
 
         .cp {
@@ -174,39 +226,24 @@ html, body {
             text-align: center;
         }
 
-        .pokemon-name{
+        .pokemon-name {
             width: 170px;
         }
 
-        .button {
-            width: 170px;
-            height: 30px;
-            border-radius: 30px;
-            background-color: skyblue;
-            cursor: pointer;
-            color: white;
-            text-align: center;
-            line-height: 30px;
 
-            &.transfer-button {
-                margin: 0 auto;
-                margin-top: 25px;
-            }
 
-        }
-
-        .input-name-wrapper{
+        .input-name-wrapper {
             width: 170px;
             margin: 0 auto;
 
-            input{
+            input {
                 width: 100%;
                 box-sizing: border-box;
                 height: 30px;
                 text-align: center;
             }
 
-            .button{
+            .button {
                 width: 70%;
                 margin: 5px auto 0 auto;
             }
@@ -268,6 +305,23 @@ html, body {
             }
         }
 
+    }
+
+}
+
+.button {
+    width: 170px;
+    height: 30px;
+    border-radius: 30px;
+    background-color: skyblue;
+    cursor: pointer;
+    color: white;
+    text-align: center;
+    line-height: 30px;
+
+    &.transfer-button {
+        margin: 0 auto;
+        margin-top: 25px;
     }
 
 }

@@ -493,13 +493,21 @@ Controller.prototype.encounterPokemonRoute = Q.async(function*(req, res) {
 
         if (pokemon) {
 
-            this.externalPlayer.lastEncounteredPokemon = yield pokemon.encounter();
+            this.externalPlayer.lastEncounteredPokemon = pokemon;
 
-            res.send(serialize(this.externalPlayer.lastEncounteredPokemon));
+            var encouterResult = yield pokemon.encounter();
+
+            var result = serialize(this.externalPlayer);
+
+            result.EncounterResponse = serialize(encouterResult.EncounterResponse);
+
+            res.send(result);
 
         }
 
-    }else{
+        res.send({error: 'Too far away'});
+
+    } else {
 
         res.send({error: 'Too far away'});
 

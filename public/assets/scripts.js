@@ -393,7 +393,6 @@ var updateItems = function (result) {
     var $itemrow = $('<tr/>').addClass('item');
     var $itemImage = $('<td><img/></td>').addClass('item-image');
     var $itemCount = $('<td><div class="item-count"></td>');
-    var $itemSelection = $('<td/>').addClass('item-selection');
     var $itemRecycle = $('<td><input value="0"/> <button class="recycle">Remove</button></td>').addClass('item-recycle');
     var $counter = $('.backpack-wrapper .counter');
 
@@ -407,7 +406,6 @@ var updateItems = function (result) {
 
     $itemrow.append($itemImage);
     $itemrow.append($itemCount);
-    $itemrow.append($itemSelection);
     $itemrow.append($itemRecycle);
 
     _.each(result.inventory.items, function (item, k) {
@@ -419,36 +417,14 @@ var updateItems = function (result) {
             $item.find('img').attr('src', '/assets/images/items/' + k + '.png');
             $item.find('.item-count').text(item.count);
 
-            var itemSelection = $item.find('.item-selection');
-            var input = $('<input type="checkbox" class="item-selection"/>');
             var $itemRecycleButton = $item.find('.item-recycle button');
 
             if (k.match(/ball/i)) {
                 $item.addClass('ball');
-                input.attr('type', 'radio').attr('name', 'ball');
-
-                if (k.match(/poke/i)) {
-
-                    input.attr('checked', true);
-
-                } else if (selectedBall === item.item_id) {
-
-                    input.attr('checked', true);
-
-                }
-
-                itemSelection.append(input);
 
             } else if (k.match(/berry/i)) {
 
                 $item.addClass('berry');
-                input.attr('type', 'checkbox').attr('name', 'berry');
-
-                if (razzBerryWasSelected) {
-                    input.prop('checked', true);
-                }
-
-                itemSelection.append(input);
 
             } else if (k.match(/unlimited/i)) {
 
@@ -478,10 +454,6 @@ var updateItems = function (result) {
             $backpack.append($item);
         }
     });
-
-    if ($backpack.find('[type=radio]:checked').length === 0){
-        $backpack.find('[type=radio]').first().prop('checked', true);
-    }
 
 };
 
@@ -522,7 +494,7 @@ var updatePlayerStatus = function (result) {
 
 var resetTransferButton = function (pokemon) {
 
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetailsWrapper = $('.list.pokemon-details-wrapper');
     var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
 
     pokemonDetails.find('.transfer-button').off('click');
@@ -549,7 +521,7 @@ var resetTransferButton = function (pokemon) {
 
 var resetRenameButton = function (pokemon) {
 
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetailsWrapper = $('.list.pokemon-details-wrapper');
     var currentName = pokemon.nickname || pokemon.name;
 
     pokemonDetailsWrapper.find('.pokemon-name').val(currentName);
@@ -578,7 +550,7 @@ var resetRenameButton = function (pokemon) {
 };
 
 var resetEvolveButton = function (pokemon, result) {
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetailsWrapper = $('.list.pokemon-details-wrapper');
     var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
     var pokemonFamilyCandies = findCandies(pokemon, result);
 
@@ -621,7 +593,7 @@ var resetEvolveButton = function (pokemon, result) {
 
 var openDetails = function (pokemon, result) {
 
-    var pokemonDetailsWrapper = $('.pokemon-details-wrapper');
+    var pokemonDetailsWrapper = $('.list.pokemon-details-wrapper');
 
     var pokemonDetails = pokemonDetailsWrapper.find('.pokemon-details');
 
@@ -800,56 +772,120 @@ var limitMarkers = function (markers, limit) {
 
 };
 
-var clickOnPokemon = function () {
+var getPokemonNum = function (num) {
 
-    var marker = this;
+    var pokemonNum = num;
 
-    var data = {
-        location:     {
-            lat: this.pokemon.latitude,
-            lng: this.pokemon.longitude
-        },
-        ball:         $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
-        useRazzBerry: $('.backpack .item.berry input[type=checkbox]:checked').length
-    };
-
-    if (!data.ball){
-        alert('Select a Ball');
-        return;
+    if (pokemonNum < 10) {
+        pokemonNum = '00' + pokemonNum;
+    } else if (pokemonNum < 100) {
+        pokemonNum = '0' + pokemonNum;
     }
 
-    $.ajax({
-        method:      'POST',
-        url:         '/player/catchpokemon',
-        data:        JSON.stringify(data),
-        contentType: 'application/json',
-        dataType:    'json'
-    }).success(function (result) {
+    return pokemonNum;
+};
 
-        if (!result.error) {
-            console.log(result.catchResult);
-            updatePlayerStatus(result);
+var lastClickedPokemonMarker = null;
+
+var initCatchPokemonButton = function () {
+
+    $('.encountered-pokemon .button').on('click', function () {
+
+        var ball = $(this).parents('.encountered-pokemon').find('[name=ball]:checked').val();
+
+        $.ajax({
+            method:      'POST',
+            url:         '/player/catchencounteredpokemon',
+            data:        JSON.stringify({ball: ball || 1}),
+            contentType: 'application/json',
+            dataType:    'json'
+        }).success(function (result) {
 
             switch (result.catchResult.CatchPokemonResponse.status) {
 
                 case 0:
                     alert('You reached your pokemon limit.');
+                    //updatePlayerStatus(result);
+                    //$('.encountered-pokemon').removeClass('open');
+                    //lastClickedPokemonMarker .setMap(null);
                     break;
                 case 1:
                     alert('Pokemon Caught!!! :D');
-                    marker.setMap(null);
+                    updatePlayerStatus(result);
+                    $('.encountered-pokemon').removeClass('open');
+                    lastClickedPokemonMarker.setMap(null);
                     break;
                 case 2:
                     alert('The Pokemon broke out from the ball. :|');
                     break;
                 case 3:
                     alert('The Pokemon ran away! :,(');
-                    marker.setMap(null);
+                    lastClickedPokemonMarker.setMap(null);
+                    $('.encountered-pokemon').removeClass('open');
                     break;
                 case 4:
                     alert('You missed the pokemon. O_O');
                     break;
             }
+
+            console.log(result);
+
+        });
+
+    });
+};
+
+var clickOnPokemon = function () {
+
+    lastClickedPokemonMarker = this;
+
+    var data = {
+        location: {
+            lat: this.pokemon.latitude,
+            lng: this.pokemon.longitude
+        },
+        //ball:         $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
+        //useRazzBerry: $('.backpack .item.berry input[type=checkbox]:checked').length
+    };
+
+
+    $.ajax({
+        method:      'POST',
+        url:         '/player/encounterpokemon',
+        data:        JSON.stringify(data),
+        contentType: 'application/json',
+        dataType:    'json'
+    }).success(function (result) {
+
+        if (!result.error) {
+
+            var $encounteredPokemon = $('.encountered-pokemon');
+
+            var pokemonDetails = $encounteredPokemon.find('.pokemon-details');
+
+            var pokemonData = result.EncounterResponse.wild_pokemon.pokemon_data;
+            pokemonDetails.find('img.pokemon-picture').prop('src', '/assets/images/pokemons/' + getPokemonNum(pokemonData.pokemon_id) + '.png');
+            pokemonDetails.find('.points').text(pokemonData.cp);
+
+            $encounteredPokemon.addClass('open');
+
+            var $ballsSelection = $encounteredPokemon.find('.ball-selection');
+
+            $ballsSelection.html('');
+
+            _.each(result.inventory.items, function (item, key) {
+
+                if (key.match(/ball/i) && item.count > 0) {
+                    var $ballTemplate = $('.templates .ball').clone();
+
+                    $ballTemplate.find('input').prop('id', key).val(item.item_id);
+                    $ballTemplate.find('label').prop('for', key);
+                    $ballTemplate.find('img').prop('src', '/assets/images/items/' + key + '.png');
+
+                    $ballsSelection.append($ballTemplate);
+                }
+
+            });
 
         } else {
             alert('Too far away.');
@@ -1273,7 +1309,7 @@ var initPokemonList = function () {
     });
 
     $pokemonsDetailsWrapper.find('.close').on('click', function () {
-        $pokemonsDetailsWrapper.removeClass('open');
+        $(this).parent().removeClass('open');
     });
 
     $incubatorsLayer.find('.close').first().on('click', function () {
@@ -1331,5 +1367,7 @@ $(document).ready(function () {
     initBackpack();
     initPokemonList();
     $('.logout').on('click', logout);
+
+    initCatchPokemonButton();
 
 });

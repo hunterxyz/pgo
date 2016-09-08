@@ -137,6 +137,49 @@ body {
   right: 5px;
   cursor: pointer;
 }
+.pokemon-details-wrapper.encountered-pokemon {
+  display: none;
+  top: 50%;
+  left: 50%;
+  margin-top: -250px;
+  margin-left: -150px;
+  height: 500px;
+}
+.pokemon-details-wrapper.encountered-pokemon.open {
+  display: block;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li {
+  display: inline-block;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li input[type=radio] {
+  display: none;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li input[type=radio]:checked + label {
+  border: 1px solid red;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li label {
+  position: relative;
+  height: 50px;
+  width: 50px;
+  display: block;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li label img {
+  height: 100%;
+}
+.pokemon-details-wrapper.encountered-pokemon .button {
+  margin: 20px auto 0 auto;
+}
 .pokemon-details-wrapper .pokemon-details .cp {
   padding: 10px;
   text-align: center;
@@ -151,20 +194,6 @@ body {
 }
 .pokemon-details-wrapper .pokemon-details .pokemon-name {
   width: 170px;
-}
-.pokemon-details-wrapper .pokemon-details .button {
-  width: 170px;
-  height: 30px;
-  border-radius: 30px;
-  background-color: skyblue;
-  cursor: pointer;
-  color: white;
-  text-align: center;
-  line-height: 30px;
-}
-.pokemon-details-wrapper .pokemon-details .button.transfer-button {
-  margin: 0 auto;
-  margin-top: 25px;
 }
 .pokemon-details-wrapper .pokemon-details .input-name-wrapper {
   width: 170px;
@@ -225,6 +254,20 @@ body {
 .pokemon-details-wrapper .pokemon-details .currencies td img {
   height: 20px;
   vertical-align: text-bottom;
+}
+.button {
+  width: 170px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: skyblue;
+  cursor: pointer;
+  color: white;
+  text-align: center;
+  line-height: 30px;
+}
+.button.transfer-button {
+  margin: 0 auto;
+  margin-top: 25px;
 }
 .pokemons-wrapper .pokemon-tabs ul {
   list-style: none;
