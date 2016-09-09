@@ -162,9 +162,11 @@ html, body {
         display: none;
         top: 50%;
         left: 50%;
-        margin-top: -250px;
+        margin-top: -180px;
         margin-left: -150px;
-        height: 500px;
+        height: 360px;
+
+        background: -webkit-linear-gradient(top, rgba(125,185,232,1) 0%,rgba(41,137,216,1) 5%,rgba(42,127,25,1) 64%);
 
         &.open {
             display: block;
@@ -201,6 +203,37 @@ html, body {
                     img {
                         height: 100%;
                     }
+                }
+            }
+        }
+
+        .razz-berry{
+
+            &.hidden{
+                display: none;
+            }
+
+            input[type=checkbox] {
+                display: none;
+
+                &:checked + label{
+                    border: 1px solid red;
+                }
+            }
+
+            label {
+                position: relative;
+                height: 50px;
+                width: 50px;
+                display: block;
+                box-sizing: border-box;
+                cursor: pointer;
+                border: 1px solid transparent;
+                border-radius: 50%;
+                margin: 0 auto;
+
+                img {
+                    height: 100%;
                 }
             }
         }

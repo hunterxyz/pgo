@@ -141,9 +141,10 @@ body {
   display: none;
   top: 50%;
   left: 50%;
-  margin-top: -250px;
+  margin-top: -180px;
   margin-left: -150px;
-  height: 500px;
+  height: 360px;
+  background: -webkit-linear-gradient(top, #7db9e8 0%, #2989d8 5%, #2a7f19 64%);
 }
 .pokemon-details-wrapper.encountered-pokemon.open {
   display: block;
@@ -175,6 +176,29 @@ body {
   border-radius: 50%;
 }
 .pokemon-details-wrapper.encountered-pokemon ul.ball-selection li label img {
+  height: 100%;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry.hidden {
+  display: none;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry input[type=checkbox] {
+  display: none;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry input[type=checkbox]:checked + label {
+  border: 1px solid red;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry label {
+  position: relative;
+  height: 50px;
+  width: 50px;
+  display: block;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry label img {
   height: 100%;
 }
 .pokemon-details-wrapper.encountered-pokemon .button {

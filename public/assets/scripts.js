@@ -387,8 +387,6 @@ var findCandies = function (pokemon, result) {
 
 var updateItems = function (result) {
     var $item;
-    var razzBerryWasSelected = $('.backpack .item.berry input[type=checkbox]:checked').length;
-    var selectedBall = $('[type=radio]:checked').parent().parent().find('.item-recycle button').data('itemId');
     var $backpack = $('.backpack tbody').html('');
     var $itemrow = $('<tr/>').addClass('item');
     var $itemImage = $('<td><img/></td>').addClass('item-image');
@@ -792,11 +790,17 @@ var initCatchPokemonButton = function () {
     $('.encountered-pokemon .button').on('click', function () {
 
         var ball = $(this).parents('.encountered-pokemon').find('[name=ball]:checked').val();
+        var razzBerrySelected = $(this).parents('.encountered-pokemon').find('input#razz-berry:checked').length;
+
+        var data = {
+            ball:         ball || 1,
+            useRazzBerry: razzBerrySelected
+        };
 
         $.ajax({
             method:      'POST',
             url:         '/player/catchencounteredpokemon',
-            data:        JSON.stringify({ball: ball || 1}),
+            data:        JSON.stringify(data),
             contentType: 'application/json',
             dataType:    'json'
         }).success(function (result) {
@@ -843,11 +847,8 @@ var clickOnPokemon = function () {
         location: {
             lat: this.pokemon.latitude,
             lng: this.pokemon.longitude
-        },
-        //ball:         $('.backpack .item.ball input[type=radio]:checked').parents('tr').find('.recycle').data('itemId'),
-        //useRazzBerry: $('.backpack .item.berry input[type=checkbox]:checked').length
+        }
     };
-
 
     $.ajax({
         method:      'POST',
@@ -883,6 +884,14 @@ var clickOnPokemon = function () {
                     $ballTemplate.find('img').prop('src', '/assets/images/items/' + key + '.png');
 
                     $ballsSelection.append($ballTemplate);
+                }
+
+                if (key === 'razzBerry') {
+                    if(item.count > 0){
+                        $encounteredPokemon.find('.razz-berry').removeClass('hidden');
+                    }else{
+                        $encounteredPokemon.find('.razz-berry').addClass('hidden');
+                    }
                 }
 
             });
