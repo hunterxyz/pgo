@@ -62,6 +62,39 @@ var levels = [
     5000000
 ];
 
+var itemsMap = {
+    0:    'unknown',
+    1:    'pokeBall',
+    2:    'greatBall',
+    3:    'ultraBall',
+    4:    'masterBall',
+    101:  'potion',
+    102:  'superPotion',
+    103:  'hyperPotion',
+    104:  'maxPotion',
+    201:  'revive',
+    202:  'maxRevive',
+    301:  'luckyEgg',
+    401:  'incenseOrdinary',
+    402:  'incenseSpicy',
+    403:  'incenseCool',
+    404:  'incenseFloral',
+    501:  'troyDisk',
+    602:  'xAttack',
+    603:  'xDefense',
+    604:  'xMiracle',
+    701:  'razzBerry',
+    702:  'blukBerry',
+    703:  'nanabBerry',
+    704:  'weparBerry',
+    705:  'pinapBerry',
+    801:  'specialCamera',
+    901:  'incubatorBasicUnlimited',
+    902:  'incubatorBasic',
+    1001: 'pokemonStorageUpgrade',
+    1002: 'itemStorageUpgrade'
+};
+
 var clearCoordinates = function () {
 
     for (var i = 0; i < coordinateMarkers.length; i++) {
@@ -333,27 +366,27 @@ var isPokemonOnMap = function (pokemon) {
 
 var handleMarkerTimer = function (marker, pokeMarkers) {
 
-    // if (this.time_till_hidden_ms < 0) {
-    //
-    //     this.time_till_hidden_ms = this.time_till_hidden_ms + 1000;
-    //
-    //     if (this.time_till_hidden_ms > 0) {
-    //         clearInterval(this.interval);
-    //         _.remove(pokeMarkers, marker);
-    //         marker.setMap(null);
-    //     }
-    //
-    // } else {
+    if (this.time_till_hidden_ms < 0) {
 
-    this.time_till_hidden_ms = this.time_till_hidden_ms - 1000;
+        this.time_till_hidden_ms = this.time_till_hidden_ms + 1000;
 
-    if (this.time_till_hidden_ms <= 0) {
-        clearInterval(this.interval);
-        _.remove(pokeMarkers, marker);
-        marker.setMap(null);
+        if (this.time_till_hidden_ms > 0) {
+            clearInterval(this.interval);
+            _.remove(pokeMarkers, marker);
+            marker.setMap(null);
+        }
+
+    } else {
+
+        this.time_till_hidden_ms = this.time_till_hidden_ms - 1000;
+
+        if (this.time_till_hidden_ms <= 0) {
+            clearInterval(this.interval);
+            _.remove(pokeMarkers, marker);
+            marker.setMap(null);
+        }
+
     }
-
-    // }
 
     marker.setTitle(ms2time(this.time_till_hidden_ms));
 
@@ -887,9 +920,9 @@ var clickOnPokemon = function () {
                 }
 
                 if (key === 'razzBerry') {
-                    if(item.count > 0){
+                    if (item.count > 0) {
                         $encounteredPokemon.find('.razz-berry').removeClass('hidden');
-                    }else{
+                    } else {
                         $encounteredPokemon.find('.razz-berry').addClass('hidden');
                     }
                 }
@@ -1008,7 +1041,23 @@ var parseLoot = function (loot) {
 
     var reward = loot.FortSearchResponse;
 
-    console.log(reward);
+    var $lootPlaceholder = $('.looted-items');
+
+    _.each(reward.items_awarded, function (item) {
+
+        var $itemTemplate = $('.templates .item').clone();
+
+        $itemTemplate.find('img').prop('src', '/assets/images/items/' + itemsMap[item.item_id] + '.png');
+
+        $lootPlaceholder.prepend($itemTemplate);
+
+        setTimeout(function () {
+
+            $itemTemplate.remove();
+
+        }, 3000);
+
+    });
 
 };
 

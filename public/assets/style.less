@@ -166,7 +166,7 @@ html, body {
         margin-left: -150px;
         height: 360px;
 
-        background: -webkit-linear-gradient(top, rgba(125,185,232,1) 0%,rgba(41,137,216,1) 5%,rgba(42,127,25,1) 64%);
+        background: -webkit-linear-gradient(top, rgba(125, 185, 232, 1) 0%, rgba(41, 137, 216, 1) 5%, rgba(42, 127, 25, 1) 64%);
 
         &.open {
             display: block;
@@ -185,7 +185,7 @@ html, body {
                 input[type=radio] {
                     display: none;
 
-                    &:checked + label{
+                    &:checked + label {
                         border: 1px solid red;
                     }
                 }
@@ -207,16 +207,16 @@ html, body {
             }
         }
 
-        .razz-berry{
+        .razz-berry {
 
-            &.hidden{
+            &.hidden {
                 display: none;
             }
 
             input[type=checkbox] {
                 display: none;
 
-                &:checked + label{
+                &:checked + label {
                     border: 1px solid red;
                 }
             }
@@ -238,7 +238,7 @@ html, body {
             }
         }
 
-        .button{
+        .button {
             margin: 20px auto 0 auto;
         }
     }
@@ -262,8 +262,6 @@ html, body {
         .pokemon-name {
             width: 170px;
         }
-
-
 
         .input-name-wrapper {
             width: 170px;
@@ -515,6 +513,32 @@ html, body {
     &.visible {
         opacity: 1;
         z-index: auto;
+    }
+}
+
+.looted-items {
+    position: absolute;
+    width: 50px;
+    top: 50px;
+    right: 10px;
+
+    .item {
+
+        position: relative;
+        width: 100%;
+        height: 50px;
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .plus-one {
+            position: absolute;
+            right: 0;
+            bottom: 0px;
+            font-weight: bold;
+        }
     }
 }
 
