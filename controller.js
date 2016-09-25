@@ -230,7 +230,14 @@ Controller.prototype.startMapScanner = function (user) {
 
         currentUser.GetMapObjects().then(function (objects) {
 
-            if (objects.forts && objects.forts.checkpoints.length) {
+            var isNotEmpty = (objects.forts && objects.forts.checkpoints.length) ||
+                (objects.forts && objects.forts.gyms.length) ||
+                objects.catchable_pokemons.length ||
+                objects.nearby_pokemons.length ||
+                objects.wild_pokemons.length ||
+                objects.decimated_spawn_points.length;
+
+            if (isNotEmpty) {
 
                 self[user + 'MapObjects'] = objects;
 

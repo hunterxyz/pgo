@@ -514,9 +514,9 @@ var updatePlayerStatus = function (result) {
 
     var percentage = (exp - prevLevel) * 100 / (nextLevel - prevLevel);
 
-    $('.player-status .exp-level').css({
-        width: percentage + '%'
-    });
+    $('.player-status .exp').prop('title', (exp - prevLevel) + '/' + (nextLevel - prevLevel));
+
+    $('.player-status .exp-level').css({width: percentage + '%'});
 
     updateItems(result);
     updatePokemonList(result);
