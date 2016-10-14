@@ -1,0 +1,624 @@
+html, body {
+
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    font-family: sans-serif;
+
+}
+
+.map-placeholder {
+    height: 100%;
+    width: 100%;
+}
+
+.nearby-wrapper {
+    position: absolute;
+    bottom: 0;
+    right: 50px;
+    background-color: white;
+    width: 300px;
+    height: 300px;
+    overflow: auto;
+
+    .nearby {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        img {
+            width: 25%;
+        }
+    }
+
+    .bot-timer {
+        position: absolute;
+        z-index: 1;
+        top: 25px;
+        left: 25px;
+        width: 250px;
+        height: 250px;
+        opacity: 0.2;
+    }
+}
+
+.frequency {
+    position: absolute;
+    top: 10px;
+    right: 130px;
+    background-color: white;
+}
+
+.speed {
+    position: absolute;
+    top: 10px;
+    right: 200px;
+    background-color: white;
+}
+
+.logout {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.right-click-menu {
+    position: absolute;
+    display: none;
+    background-color: white;
+    border: 1px solid black;
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+
+        &.login-here li {
+            padding: 3px 5px;
+            font-family: sans-serif;
+            font-size: 12px;
+            text-align: left;
+
+            &:hover {
+                background-color: dodgerblue;
+            }
+        }
+
+        &.login-form {
+            display: none;
+        }
+    }
+}
+
+.player-status {
+
+    display: none;
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    text-align: center;
+
+    .level {
+        width: 46px;
+        height: 46px;
+        box-sizing: border-box;
+        border: 3px solid dodgerblue;
+        line-height: 40px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .exp {
+        width: 100%;
+        border: 1px solid dodgerblue;
+        height: 5px;
+        margin-top: 2px;
+        box-sizing: border-box;
+        border-radius: 5px;
+
+        .exp-level {
+            background-color: dodgerblue;
+            height: 100%;
+            width: 0%;
+            transition: width 400ms linear 0ms;
+        }
+    }
+
+    .backpack-button, .pokemon-button {
+        width: 46px;
+        cursor: pointer;
+    }
+}
+
+.pokemons-wrapper, .pokemon-details-wrapper {
+    position: absolute;
+    height: 650px;
+    width: 300px;
+    background-color: white;
+    bottom: 50px;
+    left: -300px;
+    transition: left 200ms ease-in 0ms;
+
+    &.open {
+        left: 0;
+    }
+
+    .close {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        cursor: pointer;
+    }
+}
+
+.pokemon-details-wrapper {
+
+    &.encountered-pokemon {
+        display: none;
+        top: 50%;
+        left: 50%;
+        margin-top: -180px;
+        margin-left: -150px;
+        height: 360px;
+
+        background: -webkit-linear-gradient(top, rgba(125, 185, 232, 1) 0%, rgba(41, 137, 216, 1) 5%, rgba(42, 127, 25, 1) 64%);
+
+        &.open {
+            display: block;
+        }
+
+        ul.ball-selection {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            text-align: center;
+
+            li {
+                display: inline-block;
+
+                input[type=radio] {
+                    display: none;
+
+                    &:checked + label {
+                        border: 1px solid red;
+                    }
+                }
+
+                label {
+                    position: relative;
+                    height: 50px;
+                    width: 50px;
+                    display: block;
+                    box-sizing: border-box;
+                    cursor: pointer;
+                    border: 1px solid transparent;
+                    border-radius: 50%;
+
+                    img {
+                        height: 100%;
+                    }
+                }
+            }
+        }
+
+        .razz-berry {
+
+            &.hidden {
+                display: none;
+            }
+
+            input[type=checkbox] {
+                display: none;
+
+                &:checked + label {
+                    border: 1px solid red;
+                }
+            }
+
+            label {
+                position: relative;
+                height: 50px;
+                width: 50px;
+                display: block;
+                box-sizing: border-box;
+                cursor: pointer;
+                border: 1px solid transparent;
+                border-radius: 50%;
+                margin: 0 auto;
+
+                img {
+                    height: 100%;
+                }
+            }
+        }
+
+        .button {
+            margin: 20px auto 0 auto;
+        }
+    }
+
+    .pokemon-details {
+
+        .cp {
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            .points {
+                font-size: 24px;
+            }
+        }
+
+        .image-wrapper {
+            text-align: center;
+        }
+
+        .pokemon-name {
+            width: 170px;
+        }
+
+        .input-name-wrapper {
+            width: 170px;
+            margin: 0 auto;
+
+            input {
+                width: 100%;
+                box-sizing: border-box;
+                height: 30px;
+                text-align: center;
+            }
+
+            .button {
+                width: 70%;
+                margin: 5px auto 0 auto;
+            }
+        }
+
+        .button-wrapper {
+            width: 170px;
+            height: 30px;
+            border-radius: 30px;
+            background-color: rgba(135, 206, 235, 0.6);
+            text-align: center;
+            line-height: 30px;
+            margin: 0 auto;
+            margin-top: 25px;
+
+            img {
+                height: 70%;
+                vertical-align: middle;
+            }
+
+            div {
+                float: left;
+                height: 100%;
+                line-height: 30px;
+                width: 50%;
+
+                span {
+                    vertical-align: middle;
+                }
+            }
+
+            &.not-enough-candies {
+                opacity: 0.5;
+            }
+
+            &.max-evolution {
+                display: none;
+            }
+        }
+
+        .currencies {
+            width: 260px;
+            font-size: 11px;
+            text-align: center;
+            margin: 0 auto;
+            margin-top: 20px;
+
+            td {
+                width: 50%;
+
+                .count {
+                    font-size: 20px;
+                }
+
+                img {
+                    height: 20px;
+                    vertical-align: text-bottom;
+                }
+            }
+        }
+
+    }
+
+}
+
+.button {
+    width: 170px;
+    height: 30px;
+    border-radius: 30px;
+    background-color: skyblue;
+    cursor: pointer;
+    color: white;
+    text-align: center;
+    line-height: 30px;
+
+    &.transfer-button {
+        margin: 0 auto;
+        margin-top: 25px;
+    }
+
+}
+
+.pokemons-wrapper {
+
+    .pokemon-tabs {
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+
+            li {
+                float: left;
+                width: 50%;
+                text-align: center;
+                height: 50px;
+
+                a {
+                    text-decoration: none;
+                    font-size: 13px;
+                    font-weight: bold;
+                    color: black;
+                    line-height: 18px;
+                    width: 100%;
+                    overflow: auto;
+                    padding: 7px;
+                    box-sizing: border-box;
+                    height: 50px;
+                    float: left;
+
+                    &:active {
+                        border: none;
+                    }
+                }
+            }
+        }
+    }
+
+    .eggs {
+        width: 100%;
+        overflow: auto;
+        height: 600px;
+
+        .eggs-selection {
+            width: 100%;
+            overflow: auto;
+            height: 600px;
+
+            .egg {
+                width: 100px;
+                float: left;
+                text-align: center;
+                margin-top: 20px;
+                cursor: pointer;
+
+                img {
+                    height: 60px;
+                }
+            }
+        }
+
+        .incubators-layer {
+            position: absolute;
+            width: 100%;
+            overflow: auto;
+            height: 100%;
+            top: 0;
+            left: -300px;
+            transition: left 200ms ease-in 0ms;
+
+            &.open {
+                left: 0;
+            }
+
+            .close {
+                position: absolute;
+                top: 400px;
+                right: 5px;
+                cursor: pointer;
+            }
+
+            .incubators {
+                position: absolute;
+                height: 150px;
+                bottom: 0;
+                overflow: auto;
+                white-space: nowrap;
+                cursor: pointer;
+
+                .incubator {
+                    display: inline-block;
+
+                    img {
+                        width: 100px;
+                    }
+                }
+            }
+        }
+    }
+
+    .pokemons {
+        width: 100%;
+        overflow: auto;
+        height: 600px;
+
+        .pokemon {
+            width: 25%;
+            height: 90px;
+            float: left;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 5px;
+            margin-bottom: 5px;
+
+            .image-wrapper {
+                text-align: center;
+                img {
+                    height: 50px;
+                }
+            }
+
+        }
+    }
+}
+
+.walking-data {
+
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 300px;
+    height: 120px;
+    background-color: white;
+    margin-left: -150px;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 200ms linear 0ms;
+
+    .eta {
+        width: 100%;
+        height: 100px;
+
+    }
+
+    .odometer {
+        width: 100%;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+
+        span {
+            font-weight: bold;
+        }
+    }
+
+    &.visible {
+        opacity: 1;
+        z-index: auto;
+    }
+}
+
+.looted-items {
+    position: absolute;
+    width: 50px;
+    top: 50px;
+    right: 10px;
+
+    .item {
+
+        position: relative;
+        width: 100%;
+        height: 50px;
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .plus-one {
+            position: absolute;
+            right: 0;
+            bottom: 0px;
+            font-weight: bold;
+        }
+    }
+}
+
+.backpack-wrapper {
+
+    position: absolute;
+    width: 300px;
+    left: -300px;
+    bottom: 50px;
+    transition: left 200ms ease-in 0ms;
+    background-color: white;
+    max-height: 440px;
+
+    .counter {
+        height: 30px;
+        text-align: center;
+        padding: 5px;
+        line-height: 30px;
+    }
+
+    .backpack-table-wrapper {
+        overflow: auto;
+        max-height: 400px;
+    }
+
+    &.open {
+        left: 0;
+    }
+
+    .close {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        cursor: pointer;
+    }
+
+    table {
+        width: 100%;
+        border-spacing: 0;
+        border-collapse: collapse;
+        margin: 0;
+        padding: 0;
+
+        tr {
+            height: 100px;
+            padding: 0;
+            margin: 0;
+            line-height: 0;
+
+            td {
+                height: 100px;
+                padding: 0;
+                margin: 0;
+                text-align: center;
+
+                &.item-image {
+                    width: 100px;
+                    height: 100px;
+                }
+
+                &.item-recycle input {
+                    width: 25px;
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    .backpack {
+        .item-image {
+            img {
+                width: 100px;
+                height: 100px;
+                line-height: 0;
+                vertical-align: middle;
+            }
+        }
+    }
+}
+
+.templates {
+    display: none;
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC70v55VW9WMwRud7E9Vv1JJjS4r7irtK0"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/xdate/0.8/xdate.min.js"></script>
+        <script src="/assets/socket.io.js"></script>
+        <script src="/assets/TimeCircles.js"></script>
+        <script src="/assets/scripts.js"></script>
+        <link rel="stylesheet" type="text/css" href="assets/style.css">
+        <link rel="stylesheet" type="text/css" href="assets/TimeCircles.css">
+        <meta charset="UTF-8">
+        <title>Pokemon Stay</title>
+    </head>
+    <body>
+        <div class="map-placeholder"></div>
+
+        <div class="nearby-wrapper">
+            <div class="nearby"></div>
+            <div class="bot-timer" data-timer="10"></div>
+        </div>
+        <div class="speed">
+            <select name="speed">
+                <option selected value="5">5 km/h (walk)</option>
+                <option selected value="10">10 km/h (run)</option>
+                <option value="15">15 km/h (run - fast)</option>
+                <option value="20">20 km/h (bike)</option>
+                <option value="50">50 km/h (car - city)</option>
+                <option value="120">120 km/h (car - highway - slow)</option>
+                <option value="250">250 km/h (car - highway - fast)</option>
+                <option value="800">800 km/h (airplane)</option>
+            </select>
+        </div>
+        <div class="frequency">
+            <select name="freq">
+                <option value="0.5">0.5 sec</option>
+                <option value="1">1 sec</option>
+                <option value="2">2 sec</option>
+                <option selected value="5">5 sec</option>
+                <option value="10">10 sec</option>
+                <option value="15">15 sec</option>
+            </select>
+        </div>
+
+        <button class="logout">Logout</button>
+
+        <div class="right-click-menu">
+            <ul class="login-here">
+                <li>Login Here</li>
+            </ul>
+            <ul class="login-form">
+                <li><input type="text" name="username" placeholder="username"/></li>
+                <li><input type="text" name="password" placeholder="password"/></li>
+                <li>
+                    <select name="provider">
+                        <option value="ptc">Pokemon Trainer club</option>
+                        <option value="google">Google</option>
+                    </select>
+                </li>
+                <li class="go">GO!</li>
+            </ul>
+        </div>
+
+        <div class="player-status">
+
+            <div>
+                <img class="backpack-button" src="/assets/images/backpack.png">
+            </div>
+
+            <div>
+                <img class="pokemon-button" src="/assets/images/pokemonButton.png">
+            </div>
+
+            <div class="level"></div>
+
+            <div class="exp">
+                <div class="exp-level"></div>
+            </div>
+
+        </div>
+
+        <div class="backpack-wrapper">
+            <div class="close">X</div>
+            <div class="counter"><span class="count"></span> / <span class="total"></span></div>
+            <div class="backpack-table-wrapper">
+                <table class="backpack">
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="pokemons-wrapper">
+            <div class="close">X</div>
+
+            <div class="pokemon-tabs">
+                <ul>
+                    <li class="pokemons-tab-link">
+                        <a href="#pokemons">
+                            <span>Pokemons</span><br/>
+                            <span class="counter"><span class="count"></span> / <span class="total"></span></span>
+                        </a>
+                    </li>
+                    <li class="eggs-tab-link">
+                        <a href="#eggs">
+                            <span>Eggs</span><br/>
+                            <span class="counter"><span class="count"></span> / <span class="total">9</span></span>
+                        </a>
+                    </li>
+                </ul>
+                <div id="pokemons" class="pokemons"></div>
+                <div id="eggs" class="eggs">
+                    <div class="eggs-selection"></div>
+                    <div class="incubators-layer">
+                        <div class="close">X</div>
+                        <div class="incubators"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="list pokemon-details-wrapper">
+            <div class="close">X</div>
+            <div class="pokemon-details">
+                <div class="cp">CP <span class="points"></span></div>
+                <div class="image-wrapper">
+                    <img class="pokemon-picture" src="" alt="">
+                </div>
+
+                <div class="input-name-wrapper">
+                    <input class="pokemon-name"/>
+                    <div class="button rename-button">Rename</div>
+                </div>
+
+                <table class="currencies">
+                    <tr>
+                        <td><img src="assets/images/stardust.png"> <span class="total-stardust count"></span></td>
+                        <td><img src="assets/images/candy.png"> <span class="total-candies count"></span></td>
+                    </tr>
+                    <tr>
+                        <td>STARDUST</td>
+                        <td><span class="candy-family"></span> Candy</td>
+                    </tr>
+                </table>
+                <div class="button transfer-button">Transfer</div>
+                <div class="button-wrapper">
+                    <div class="button evolve-button">Evolve</div>
+                    <div class="candies-to-evolve"><img src="/assets/images/candy.png"><span
+                            class="candies-count"></span></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="encountered-pokemon pokemon-details-wrapper">
+            <div class="close">X</div>
+            <div class="pokemon-details">
+                <div class="cp">CP <span class="points"></span></div>
+                <div class="image-wrapper">
+                    <img class="pokemon-picture" src="" alt="">
+                </div>
+
+
+            </div>
+
+            <ul class="ball-selection"></ul>
+
+            <div class="razz-berry"><input type="checkbox" id="razz-berry"><label for="razz-berry"><img src="/assets/images/items/razzBerry.png"></label></div>
+
+            <div class="button">CATCH</div>
+        </div>
+
+        <div class="walking-data">
+            <div class="eta"></div>
+            <div class="odometer"><span class="distance-so-far"></span> of <span class="total-distance"></span> km</div>
+        </div>
+
+        <div class="looted-items"></div>
+
+        <div class="templates">
+
+            <div class="item">
+                <img src="" alt="">
+                <div class="plus-one">+1</div>
+            </div>
+
+            <ul class="ball-selection">
+                <li class="ball">
+                    <input type="radio" id="" name="ball"/>
+                    <label for=""><img src=""></label>
+                </li>
+            </ul>
+
+            <div class="pokemon">
+                <div class="cp">CP <span class="points"></span></div>
+                <div class="image-wrapper">
+                    <img src="" alt="">
+                </div>
+                <div class="hp">
+                    <div class="hp-level"></div>
+                </div>
+                <div class="name"></div>
+            </div>
+
+            <div class="egg">
+                <div class="image-wrapper">
+                    <img src="/assets/images/pokemon-egg.png" alt="">
+                </div>
+                <div class="egg-kms">
+                    <span class="walked"></span>
+                    <span class="separator">/</span>
+                    <span class="target"></span> km
+                </div>
+            </div>
+
+            <div class="incubator">
+                <div class="image-wrapper">
+                    <img src="" alt="">
+                </div>
+            </div>
+
+        </div>
+
+    </body>
+</html>

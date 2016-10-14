@@ -1,0 +1,5 @@
+/node_modules/
+/.idea/
+/loginCache.json
+/.loginCache
+/.git.bfg-report/

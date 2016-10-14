@@ -1,0 +1,509 @@
+html,
+body {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+}
+.map-placeholder {
+  height: 100%;
+  width: 100%;
+}
+.nearby-wrapper {
+  position: absolute;
+  bottom: 0;
+  right: 50px;
+  background-color: white;
+  width: 300px;
+  height: 300px;
+  overflow: auto;
+}
+.nearby-wrapper .nearby {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+.nearby-wrapper .nearby img {
+  width: 25%;
+}
+.nearby-wrapper .bot-timer {
+  position: absolute;
+  z-index: 1;
+  top: 25px;
+  left: 25px;
+  width: 250px;
+  height: 250px;
+  opacity: 0.2;
+}
+.frequency {
+  position: absolute;
+  top: 10px;
+  right: 130px;
+  background-color: white;
+}
+.speed {
+  position: absolute;
+  top: 10px;
+  right: 200px;
+  background-color: white;
+}
+.logout {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.right-click-menu {
+  position: absolute;
+  display: none;
+  background-color: white;
+  border: 1px solid black;
+}
+.right-click-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.right-click-menu ul.login-here li {
+  padding: 3px 5px;
+  font-family: sans-serif;
+  font-size: 12px;
+  text-align: left;
+}
+.right-click-menu ul.login-here li:hover {
+  background-color: dodgerblue;
+}
+.right-click-menu ul.login-form {
+  display: none;
+}
+.player-status {
+  display: none;
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 24px;
+  text-align: center;
+}
+.player-status .level {
+  width: 46px;
+  height: 46px;
+  box-sizing: border-box;
+  border: 3px solid dodgerblue;
+  line-height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+.player-status .exp {
+  width: 100%;
+  border: 1px solid dodgerblue;
+  height: 5px;
+  margin-top: 2px;
+  box-sizing: border-box;
+  border-radius: 5px;
+}
+.player-status .exp .exp-level {
+  background-color: dodgerblue;
+  height: 100%;
+  width: 0%;
+  transition: width 400ms linear 0ms;
+}
+.player-status .backpack-button,
+.player-status .pokemon-button {
+  width: 46px;
+  cursor: pointer;
+}
+.pokemons-wrapper,
+.pokemon-details-wrapper {
+  position: absolute;
+  height: 650px;
+  width: 300px;
+  background-color: white;
+  bottom: 50px;
+  left: -300px;
+  transition: left 200ms ease-in 0ms;
+}
+.pokemons-wrapper.open,
+.pokemon-details-wrapper.open {
+  left: 0;
+}
+.pokemons-wrapper .close,
+.pokemon-details-wrapper .close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+.pokemon-details-wrapper.encountered-pokemon {
+  display: none;
+  top: 50%;
+  left: 50%;
+  margin-top: -180px;
+  margin-left: -150px;
+  height: 360px;
+  background: -webkit-linear-gradient(top, #7db9e8 0%, #2989d8 5%, #2a7f19 64%);
+}
+.pokemon-details-wrapper.encountered-pokemon.open {
+  display: block;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li {
+  display: inline-block;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li input[type=radio] {
+  display: none;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li input[type=radio]:checked + label {
+  border: 1px solid red;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li label {
+  position: relative;
+  height: 50px;
+  width: 50px;
+  display: block;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.pokemon-details-wrapper.encountered-pokemon ul.ball-selection li label img {
+  height: 100%;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry.hidden {
+  display: none;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry input[type=checkbox] {
+  display: none;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry input[type=checkbox]:checked + label {
+  border: 1px solid red;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry label {
+  position: relative;
+  height: 50px;
+  width: 50px;
+  display: block;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+.pokemon-details-wrapper.encountered-pokemon .razz-berry label img {
+  height: 100%;
+}
+.pokemon-details-wrapper.encountered-pokemon .button {
+  margin: 20px auto 0 auto;
+}
+.pokemon-details-wrapper .pokemon-details .cp {
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+.pokemon-details-wrapper .pokemon-details .cp .points {
+  font-size: 24px;
+}
+.pokemon-details-wrapper .pokemon-details .image-wrapper {
+  text-align: center;
+}
+.pokemon-details-wrapper .pokemon-details .pokemon-name {
+  width: 170px;
+}
+.pokemon-details-wrapper .pokemon-details .input-name-wrapper {
+  width: 170px;
+  margin: 0 auto;
+}
+.pokemon-details-wrapper .pokemon-details .input-name-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 30px;
+  text-align: center;
+}
+.pokemon-details-wrapper .pokemon-details .input-name-wrapper .button {
+  width: 70%;
+  margin: 5px auto 0 auto;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper {
+  width: 170px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: rgba(135, 206, 235, 0.6);
+  text-align: center;
+  line-height: 30px;
+  margin: 0 auto;
+  margin-top: 25px;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper img {
+  height: 70%;
+  vertical-align: middle;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper div {
+  float: left;
+  height: 100%;
+  line-height: 30px;
+  width: 50%;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper div span {
+  vertical-align: middle;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper.not-enough-candies {
+  opacity: 0.5;
+}
+.pokemon-details-wrapper .pokemon-details .button-wrapper.max-evolution {
+  display: none;
+}
+.pokemon-details-wrapper .pokemon-details .currencies {
+  width: 260px;
+  font-size: 11px;
+  text-align: center;
+  margin: 0 auto;
+  margin-top: 20px;
+}
+.pokemon-details-wrapper .pokemon-details .currencies td {
+  width: 50%;
+}
+.pokemon-details-wrapper .pokemon-details .currencies td .count {
+  font-size: 20px;
+}
+.pokemon-details-wrapper .pokemon-details .currencies td img {
+  height: 20px;
+  vertical-align: text-bottom;
+}
+.button {
+  width: 170px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: skyblue;
+  cursor: pointer;
+  color: white;
+  text-align: center;
+  line-height: 30px;
+}
+.button.transfer-button {
+  margin: 0 auto;
+  margin-top: 25px;
+}
+.pokemons-wrapper .pokemon-tabs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pokemons-wrapper .pokemon-tabs ul li {
+  float: left;
+  width: 50%;
+  text-align: center;
+  height: 50px;
+}
+.pokemons-wrapper .pokemon-tabs ul li a {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: bold;
+  color: black;
+  line-height: 18px;
+  width: 100%;
+  overflow: auto;
+  padding: 7px;
+  box-sizing: border-box;
+  height: 50px;
+  float: left;
+}
+.pokemons-wrapper .pokemon-tabs ul li a:active {
+  border: none;
+}
+.pokemons-wrapper .eggs {
+  width: 100%;
+  overflow: auto;
+  height: 600px;
+}
+.pokemons-wrapper .eggs .eggs-selection {
+  width: 100%;
+  overflow: auto;
+  height: 600px;
+}
+.pokemons-wrapper .eggs .eggs-selection .egg {
+  width: 100px;
+  float: left;
+  text-align: center;
+  margin-top: 20px;
+  cursor: pointer;
+}
+.pokemons-wrapper .eggs .eggs-selection .egg img {
+  height: 60px;
+}
+.pokemons-wrapper .eggs .incubators-layer {
+  position: absolute;
+  width: 100%;
+  overflow: auto;
+  height: 100%;
+  top: 0;
+  left: -300px;
+  transition: left 200ms ease-in 0ms;
+}
+.pokemons-wrapper .eggs .incubators-layer.open {
+  left: 0;
+}
+.pokemons-wrapper .eggs .incubators-layer .close {
+  position: absolute;
+  top: 400px;
+  right: 5px;
+  cursor: pointer;
+}
+.pokemons-wrapper .eggs .incubators-layer .incubators {
+  position: absolute;
+  height: 150px;
+  bottom: 0;
+  overflow: auto;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pokemons-wrapper .eggs .incubators-layer .incubators .incubator {
+  display: inline-block;
+}
+.pokemons-wrapper .eggs .incubators-layer .incubators .incubator img {
+  width: 100px;
+}
+.pokemons-wrapper .pokemons {
+  width: 100%;
+  overflow: auto;
+  height: 600px;
+}
+.pokemons-wrapper .pokemons .pokemon {
+  width: 25%;
+  height: 90px;
+  float: left;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.pokemons-wrapper .pokemons .pokemon .image-wrapper {
+  text-align: center;
+}
+.pokemons-wrapper .pokemons .pokemon .image-wrapper img {
+  height: 50px;
+}
+.walking-data {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 300px;
+  height: 120px;
+  background-color: white;
+  margin-left: -150px;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 200ms linear 0ms;
+}
+.walking-data .eta {
+  width: 100%;
+  height: 100px;
+}
+.walking-data .odometer {
+  width: 100%;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+}
+.walking-data .odometer span {
+  font-weight: bold;
+}
+.walking-data.visible {
+  opacity: 1;
+  z-index: auto;
+}
+.looted-items {
+  position: absolute;
+  width: 50px;
+  top: 50px;
+  right: 10px;
+}
+.looted-items .item {
+  position: relative;
+  width: 100%;
+  height: 50px;
+}
+.looted-items .item img {
+  width: 100%;
+  height: 100%;
+}
+.looted-items .item .plus-one {
+  position: absolute;
+  right: 0;
+  bottom: 0px;
+  font-weight: bold;
+}
+.backpack-wrapper {
+  position: absolute;
+  width: 300px;
+  left: -300px;
+  bottom: 50px;
+  transition: left 200ms ease-in 0ms;
+  background-color: white;
+  max-height: 440px;
+}
+.backpack-wrapper .counter {
+  height: 30px;
+  text-align: center;
+  padding: 5px;
+  line-height: 30px;
+}
+.backpack-wrapper .backpack-table-wrapper {
+  overflow: auto;
+  max-height: 400px;
+}
+.backpack-wrapper.open {
+  left: 0;
+}
+.backpack-wrapper .close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+.backpack-wrapper table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+}
+.backpack-wrapper table tr {
+  height: 100px;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+}
+.backpack-wrapper table tr td {
+  height: 100px;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+.backpack-wrapper table tr td.item-image {
+  width: 100px;
+  height: 100px;
+}
+.backpack-wrapper table tr td.item-recycle input {
+  width: 25px;
+  text-align: right;
+}
+.backpack-wrapper .backpack .item-image img {
+  width: 100px;
+  height: 100px;
+  line-height: 0;
+  vertical-align: middle;
+}
+.templates {
+  display: none;
+}

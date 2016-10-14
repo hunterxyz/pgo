@@ -1,0 +1,18 @@
+{
+  "name": "pgo",
+  "version": "0.0.1",
+  "dependencies": {
+    "babel-polyfill": "^6.9.1",
+    "babel-runtime": "^6.11.6",
+    "body-parser": "^1.15.2",
+    "cors": "^2.8.0",
+    "express": "^4.14.0",
+    "lodash": "^4.14.1",
+    "pokemon-go-pokedex": "biuni/PokemonGO-Pokedex",
+    "pokemongo-api": "https://github.com/gallexme/pokemongo-api.git",
+    "q": "^1.4.1",
+    "serve-static": "^1.11.1",
+    "socket.io": "^1.4.8",
+    "xdate": "^0.8.0"
+  }
+}
